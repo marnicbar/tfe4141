@@ -47,11 +47,11 @@ compile: compile_libs | $(BUILD_DIR)
 	@echo "==> Compiling UVVM, DUT and testbench..."
 	$(GHDL) -a $(GHDL_FLAGS) $(DUT)
 	$(GHDL) -a $(GHDL_FLAGS) $(TB)
-	$(GHDL) -e $(GHDL_FLAGS) $(TOP)
+	$(GHDL) -e $(GHDL_FLAGS) -o $(BUILD_DIR)/$(TOP) $(TOP)
 
 test: compile
 	@echo "==> Running test (no waveform)..."
-	$(GHDL) -r $(GHDL_FLAGS) $(TOP) --assert-level=error
+	$(BUILD_DIR)/$(TOP) --assert-level=error
 
 clean:
 	@echo "==> Cleaning build artifacts..."

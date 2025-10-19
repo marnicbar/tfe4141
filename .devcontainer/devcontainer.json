@@ -1,0 +1,17 @@
+{
+    "name": "GHDL",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "puorc.awesome-vhdl",
+                "github.copilot"
+            ],
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "bash"
+            }
+        }
+    }
+}
