@@ -14,17 +14,17 @@ end entity;
 architecture sim of tb_adder_uvvm is
   constant C_WIDTH : positive := 8;
 
-  signal a    : std_logic_vector(C_WIDTH-1 downto 0);
-  signal b    : std_logic_vector(C_WIDTH-1 downto 0);
+  signal a    : std_logic_vector(C_WIDTH - 1 downto 0);
+  signal b    : std_logic_vector(C_WIDTH - 1 downto 0);
   signal cin  : std_logic := '0';
-  signal sum  : std_logic_vector(C_WIDTH-1 downto 0);
+  signal sum  : std_logic_vector(C_WIDTH - 1 downto 0);
   signal cout : std_logic;
 
 begin
   -- DUT
-  i_dut: entity work.adder
-    generic map ( G_WIDTH => C_WIDTH )
-    port map (
+  i_dut : entity work.adder
+    generic map(G_WIDTH => C_WIDTH)
+    port map(
       a    => a,
       b    => b,
       cin  => cin,
@@ -33,9 +33,9 @@ begin
     );
 
   -- Simple test sequencer
-  p_seq: process
-    variable v_a, v_b : unsigned(C_WIDTH-1 downto 0);
-    variable v_sum    : unsigned(C_WIDTH-1 downto 0);
+  p_seq : process
+    variable v_a, v_b : unsigned(C_WIDTH - 1 downto 0);
+    variable v_sum    : unsigned(C_WIDTH - 1 downto 0);
     variable v_cout   : std_logic;
   begin
     -- Optional: choose log destination
@@ -85,13 +85,13 @@ begin
     check_value(cout, v_cout, ERROR, "10+5+1 carry");
 
     -- Final reporting
-  report_msg_id_panel(VOID); -- Prints enabled/disabled log IDs (optional)
-  report_global_ctrl(VOID);
+    report_msg_id_panel(VOID); -- Prints enabled/disabled log IDs (optional)
+    report_global_ctrl(VOID);
     report_check_counters(FINAL);
     report_alert_counters(FINAL);
 
     std.env.stop; -- End simulation cleanly
-    wait; -- forever
+    wait;         -- forever
   end process;
 
 end architecture;

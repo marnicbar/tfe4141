@@ -8,17 +8,17 @@ entity adder is
     G_WIDTH : positive := 8
   );
   port (
-    a   : in  std_logic_vector(G_WIDTH-1 downto 0);
-    b   : in  std_logic_vector(G_WIDTH-1 downto 0);
-    cin : in  std_logic := '0';
-    sum : out std_logic_vector(G_WIDTH-1 downto 0);
-    cout: out std_logic
+    a    : in std_logic_vector(G_WIDTH - 1 downto 0);
+    b    : in std_logic_vector(G_WIDTH - 1 downto 0);
+    cin  : in std_logic := '0';
+    sum  : out std_logic_vector(G_WIDTH - 1 downto 0);
+    cout : out std_logic
   );
 end entity;
 
 architecture rtl of adder is
 begin
-  process(a, b, cin)
+  process (a, b, cin)
     variable tmp : unsigned(G_WIDTH downto 0);
   begin
     -- Extend operands with leading zero to capture carry
@@ -26,7 +26,7 @@ begin
     if cin = '1' then
       tmp := tmp + 1;
     end if;
-    sum  <= std_logic_vector(tmp(G_WIDTH-1 downto 0));
+    sum  <= std_logic_vector(tmp(G_WIDTH - 1 downto 0));
     cout <= std_logic(tmp(G_WIDTH));
   end process;
 end architecture;

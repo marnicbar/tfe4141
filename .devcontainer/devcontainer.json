@@ -6,8 +6,9 @@
     "customizations": {
         "vscode": {
             "extensions": [
+                "github.copilot",
                 "puorc.awesome-vhdl",
-                "github.copilot"
+                "vinrobot.vhdl-formatter"
             ],
             "settings": {
                 "terminal.integrated.defaultProfile.linux": "bash"
