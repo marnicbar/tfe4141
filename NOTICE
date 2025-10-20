@@ -1,0 +1,25 @@
+TFE4141 Design of Digital Systems - Term Project
+Copyright 2025 Group 16
+
+This product includes software developed by Group 16 for the TFE4141
+course at NTNU (Norwegian University of Science and Technology).
+
+================================================================================
+
+This repository includes UVVM (Universal VHDL Verification Methodology)
+libraries in the UVVM/ directory, which are:
+
+Copyright 2024 UVVM
+Licensed under the Apache License, Version 2.0 (the "License").
+You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+The UVVM libraries were obtained from the UVVM repository and are subject
+to their own Apache 2.0 license included in UVVM/LICENSE.
+
+Modifications to UVVM files:
+- UVVM/script/compile_all.sh
+- UVVM/uvvm_util/src/adaptations_pkg.vhd
+
+All other files in this repository are original work by Group 16 and are
+licensed under the Apache License, Version 2.0 as described in the LICENSE
+file at the root of this repository.
