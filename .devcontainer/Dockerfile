@@ -1,4 +1,4 @@
-FROM ghdl/ghdl:5.1.1-gcc-ubuntu-24.04
+FROM ghdl/ghdl:5.1.1-llvm-jit-ubuntu-24.04
 
 # Install packages
 RUN apt-get update && apt-get install -y \

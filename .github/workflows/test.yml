@@ -6,7 +6,7 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    container: ghdl/ghdl:5.1.1-gcc-ubuntu-24.04
+    container: ghdl/ghdl:5.1.1-llvm-jit-ubuntu-24.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
