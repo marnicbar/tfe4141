@@ -51,7 +51,11 @@ compile: compile_libs | $(BUILD_DIR)
 
 test: compile
 	@echo "==> Running test (no waveform)..."
-	$(BUILD_DIR)/$(TOP) --assert-level=error
+	@sh -c 'if $(GHDL) --version | grep -q "LLVM JIT"; then \
+		exec $(GHDL) -r $(GHDL_FLAGS) $(TOP) --assert-level=error; \
+	else \
+		exec $(BUILD_DIR)/$(TOP) --assert-level=error; \
+	fi'
 
 clean:
 	@echo "==> Cleaning build artifacts..."
