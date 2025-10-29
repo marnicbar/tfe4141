@@ -21,9 +21,9 @@ GHDL_FLAGS := --std=08 -frelaxed -P$(UVVM_LIBS)
 
 # Designs and testbenches
 # Blakley
-DUT_BLAKLEY := $(SRC_DIR)/adder.vhd
-TB_BLAKLEY  := $(TB_DIR)/tb_adder_uvvm.vhd
-TOP_BLAKLEY := tb_adder_uvvm
+DUT_BLAKLEY := $(SRC_DIR)/blakley.vhd
+TB_BLAKLEY  := $(TB_DIR)/tb_blakley.vhd
+TOP_BLAKLEY := tb_blakley
 BUILD_DIR_BLAKLEY := $(BUILD_DIR)/$(TOP_BLAKLEY)
 # Modular exponentiation
 DUT_EXP := $(SRC_DIR)/adder.vhd

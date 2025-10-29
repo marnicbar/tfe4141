@@ -8,3 +8,6 @@ context uvvm_util.uvvm_util_context;
 entity tb_blakley is
 end entity;
 
+architecture sim of tb_blakley is
+begin
+end architecture;
