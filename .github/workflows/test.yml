@@ -17,4 +17,4 @@ jobs:
           apt-get install -y make
 
       - name: Compile and test VHDL files
-        run: make test
+        run: make test -j

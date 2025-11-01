@@ -70,17 +70,17 @@ compile: compile-blakley compile-exp
 test-blakley: compile-blakley
 	@echo "==> Running tests for blakley..."
 	@sh -c 'if $(GHDL) --version | grep -q "LLVM JIT"; then \
-		exec $(GHDL) -r $(GHDL_FLAGS) $(TOP_BLAKLEY) --assert-level=error; \
+		exec $(GHDL) -r $(GHDL_FLAGS) --workdir=$(BUILD_DIR_BLAKLEY) $(TOP_BLAKLEY) --assert-level=error; \
 	else \
-		exec $(BUILD_DIR)/$(TOP_BLAKLEY)/$(TOP_BLAKLEY) --assert-level=error; \
+		exec $(BUILD_DIR_BLAKLEY)/$(TOP_BLAKLEY) --assert-level=error; \
 	fi'
 
 test-exp: compile
 	@echo "==> Running tests for modular exponentiation..."
 	@sh -c 'if $(GHDL) --version | grep -q "LLVM JIT"; then \
-		exec $(GHDL) -r $(GHDL_FLAGS) $(TOP_EXP) --assert-level=error; \
+		exec $(GHDL) -r $(GHDL_FLAGS) --workdir=$(BUILD_DIR_EXP) $(TOP_EXP) --assert-level=error; \
 	else \
-		exec $(BUILD_DIR)/$(TOP_EXP)/$(TOP_EXP) --assert-level=error; \
+		exec $(BUILD_DIR_EXP)/$(TOP_EXP) --assert-level=error; \
 	fi'
 
 test: test-blakley test-exp	
