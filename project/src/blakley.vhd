@@ -18,9 +18,33 @@
 -- 
 ----------------------------------------------------------------------------------
 
+-- ===============================================================
+--  PACKAGE: shared type definitions (e.g. FSM state)
+-- ===============================================================
+package blakely_pkg is
+    type state_type is (
+        read_inputs,
+        initial_shifting,
+        addition,
+        comp1,
+        sub1,
+        comp2,
+        sub2,
+        store_shift,
+        saida
+    );
+end package blakely_pkg;
+
+package body blakely_pkg is
+end package body blakely_pkg;
+
+-- ===============================================================
+--  ENTITY: blakely
+-- ===============================================================
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
+use work.blakely_pkg.all; -- bring in the enum type
 
 entity blakely is
     generic (
@@ -41,10 +65,18 @@ entity blakely is
 
         -- outputs
         Output        : out std_logic_vector(bit_width - 1 downto 0);
-        finished_calc : out std_logic
+        finished_calc : out std_logic;
+
+        -- debug
+        -- pragma translate_off
+        dbg_state : out state_type
+        -- pragma translate_on
     );
 end blakely;
 
+-- ===============================================================
+--  ARCHITECTURE
+-- ===============================================================
 architecture Behavioral of blakely is
 
     ------------------------------------------------------------------------
@@ -55,22 +87,6 @@ architecture Behavioral of blakely is
     ------------------------------------------------------------------------
     -- FSM state declarations
     ------------------------------------------------------------------------
-    type state_type is (
-        -- reading states
-        read_inputs,
-
-        -- working states
-        initial_shifting,
-        addition,
-        comp1,
-        sub1,
-        comp2,
-        sub2,
-        store_shift,
-
-        -- output
-        saida
-    );
     signal state, state_next : state_type;
 
     -- Save the most significant bit from A
@@ -202,5 +218,9 @@ begin
     -- Outputs
     Output        <= std_logic_vector(reg_out);
     finished_calc <= done_calc_int;
+
+    -- pragma translate_off
+    dbg_state <= state;
+    -- pragma translate_on
 
 end Behavioral;
