@@ -11,9 +11,6 @@ use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
 entity controller is
-	generic (
-		bit_width 			: positive := 16
-	);
 	port (
 		--misc
 		clk 				: in  std_logic;
@@ -21,23 +18,28 @@ entity controller is
 
 		--FSM takes no data-signals as input, only 1-bit control signals
 		
-
-		--external controll signals------------------------------------
+		--external controll signals in/out of the RSA-core----------------------------
 		--input controll
 		valid_in	: in STD_LOGIC;  --aka: msgin_valid
 		ready_in	: out STD_LOGIC; --aka: msgin_ready
+		msgin_last  : in STD_LOGIC;
 		--ouput controll
-		ready_out	: in STD_LOGIC;  --aka: msgout_ready
-		valid_out	: out STD_LOGIC; --aka: msgout_valid
+		ready_out	: in   STD_LOGIC;  --aka: msgout_ready
+		valid_out	: out  STD_LOGIC; --aka: msgout_valid
+		msgout_last	: out  STD_LOGIC;
+		Blak_reset_n: out  STD_LOGIC;   --blakley module reset sign. must be reset after each computation. 
 
-		--internal controll signals
-		e_bit 		        : in std_logic;    --the LSB of register LSR_e
-		LS_e                : out STD_LOGIC;   --signal which left shift key_e
-		e_counter_end       : in std_logic;    --tells the FSM when counter >= 255
+		--controll signals inside the RSA-core
+		e_bit 		        : in  STD_LOGIC;    --the LSB of register LSR_e
+		LS_enable           : out STD_LOGIC;   --signal which left shift key_e
+		e_counter_end       : in  STD_LOGIC;    --tells the FSM when counter >= 255
+		e_counter_increment : out  STD_LOGIC;    --tells the FSM when counter >= 255
 		initialize_regs     : out STD_LOGIC;   --loads initial values into C, P, LSR_e and e_counter
 		Blak_enable	        : out STD_LOGIC;   --signal that tells Blakley module to start computation.
-		Blak_finished       : in STD_LOGIC;    --signal that Blakley module is finished.
-        pc_select           : out std_logic    -- Signal for which of P or C that are using the blakley module:
+		Blak_finished       : in  STD_LOGIC;    --signal that Blakley module is finished.
+		is_last_msg_enable  : out STD_LOGIC;
+		is_last_msg         : in  STD_LOGIC;
+        pc_select           : out STD_LOGIC    -- Signal for which of P or C that are using the blakley module:
 	);
 end controller;
 
@@ -45,17 +47,16 @@ architecture Behavioral of controller is
 
 	type state_type is (
 		--states associated with handshake data inn
-		is_in_valid, set_ready, initialize, read_e_bit,
-		--states associated with computation M*e mod n
-		calc_C, calc_P,
+		is_in_valid, initialize, read_e_bit,
+		--states associated with P = P*P mod n,  and C = C*P mod n.
+		calc_C, reset_blak_module, calc_P, increment_e, is_e_processed, Leftshift_e,
 		--states associated with handshake data out
-		is_out_ready, out_ready
-		--IDLE,ERR  this was here by default. comment it out.
+		is_out_ready, is_out_ready_last
 	);
 	signal state,state_next : state_type;
 begin
 
-	main_statem_proc : process (state,valid_in,ready_out,input_equal,input_greater)
+	main_statem_proc : process (state, Blak_finished, e_counter_end, e_bit, ready_out, valid_in )
 	begin
 		--default values
 		--included at the as to make it unessesarry to specify in every state
@@ -63,91 +64,132 @@ begin
 		initialize_regs <= '0';
 		ready_in 		<= '0';
 		valid_out 		<= '0';
+		is_last_msg_enable <= '0';
+		msgout_last     <= '0';
+		e_counter_increment <= '0';
 		pc_select       <= '0';
-		state_next 		<= is_in_valid;
+		Blak_reset_n    <= '1';            --reset for blakley module is normally high.
+		state_next 		<= is_in_valid;    --We start at this state.
 
 		
 		--main implementation of statemachine
 		case(state) is
 		
-		    --State 1/8:
-			when is_in_valid =>                    --"when in state "1_in_valid":
-				if valid_in = '1' then             --if msgin_valid = 1
-					state_next <= set_ready;         --we go to the next handshake state
+		    --State 1/11:
+			when is_in_valid =>                   --"when in state "1_in_valid":
+			    valid_out       <= '0';           --If we got her from handshake out, then stop sending data out.
+			    msgout_last     <= '0';
+				if valid_in = '1' then            --if msgin_valid = 1
+					state_next <= initialize;     --we go to the next handshake state
 				else
 					state_next <= is_in_valid;
 				end if;
 				
-			--State 2/8:
-			when set_ready =>
-			    ready_in <= '1';                   --msgin_ready = 1                  
-				state_next <= initialize;
 				
-			--State 3/8:
+			--State 2/11:
 			when initialize =>
-			    ready_in <= '0';                   --msgin_ready = 0, so that a new message is not sent to the RSA CORE.
-			    initialize_regs <= '1';            -- loads M into P, and '1', into C. Loads key_e into LSR_e.            
-				state_next <= read_e_bit;        
+			    ready_in <= '1';                   --msgin_ready = 1
+			    is_last_msg_enable <= '1';        --tell the register to hold the value "msgin_last".
+			    initialize_regs <= '1';            -- loads M into P, and '1', into C. Loads key_e into LSR_e.                 
+				state_next <= read_e_bit;
 				
 				
-			--State 4/8:
+			--State 3/11:
 			when read_e_bit => 
-			    LS_e <= '0';                   --if prev state was calc_P, then we now stop left shifting key_e.
-			    initialize_regs <= '0';        --Values are initialized already.
-			    Blak_enable <= '1';              
-				if e_bit = '1' then             --if msgin_valid = 1
-				    pc_select <= '1';
-					state_next <= calc_C;         --we go to the next handshake state
+			    is_last_msg_enable <= '0';
+			    ready_in <= '0';              -- msgin_ready = 0, so that a new message is not sent to the RSA CORE.
+			    initialize_regs <= '0';       --if prev state was initialize, then we dont want to initialize anymore.
+			    LS_enable <= '0';             --if prev state was Leftshift_e, then we now stop left shifting key_e.           
+				if e_bit = '1' then               --if msgin_valid = 1
+					state_next <= calc_C;         --we calculate C.
 				else
-				    pc_select <= '0';
-					state_next <= calc_P;
+					state_next <= calc_P;         --we calculate P.
 				end if;
 				
-			--State 5/8:
-			when calc_C =>                 
-				if Blak_finished = '1' then           
-					state_next <= calc_P;         
+				
+			--State 4/11:
+			when calc_C =>
+			    Blak_enable <= '1';
+			    pc_select <= '1';           --C gets connected to the Blakley module.                 
+				if Blak_finished = '1' then  
+					state_next <= reset_blak_module;         
 				else
 					state_next <= calc_C;
 				end if;
 				
-			--must make sure that blak_finished goes low at some point, 
-			--so that we dont skip a calculation.
+
+			--State 5/11:
+			when reset_blak_module =>
+			    Blak_enable     <= '0';
+			    Blak_reset_n    <= '0';   --we reset blakley-module, to prepare it for next computation.  
+			    state_next <= calc_P;              
+
 				
-			--State 6/8:
-			when calc_P =>                 
-				if Blak_finished = '1' then
-				    if e_counter_end = '1' then
-				       valid_out <= '1';          
-					   state_next <= is_out_ready;
+			--State 6/11:
+			when calc_P =>
+			    pc_select         <= '0';    --P gets connected to the Blakley module.
+			    Blak_enable       <= '1';
+			    Blak_reset_n      <= '1';    --if prev state was reset_blak_module, then we stop resetting now.               
+				if (Blak_finished = '1') then
+				    state_next <= increment_e;        
+				else
+					state_next <= calc_P;  
+				end if;
+				
+				
+			--State 7/11:
+			when increment_e =>
+			    e_counter_increment <= '1';
+			    Blak_enable         <= '0';
+			    Blak_reset_n        <= '0';    -- reset blakley after updating P.
+			    state_next          <= is_e_processed;
+			   
+				
+			--State 8/11:
+			when is_e_processed => 
+			    e_counter_increment <= '0';
+			    Blak_reset_n        <= '1';
+			    if e_counter_end = '1' then  --"if we have gone through all the bits of e"
+			           if(is_last_msg = '1') then
+			             state_next <= is_out_ready_last;
+			           else
+			             state_next <= is_out_ready;
+			           end if;         
 					else
-					   LS_e <= '1'; --we leftshift key_e
-					   state_next <= read_e_bit;
-					end if;        
-				else
-					state_next <= calc_P;
-				end if;
-				
-			--State 7/8:
-			when is_out_ready =>                 
-				if Blak_finished = '1' then        
-				else
-					state_next <= calc_P;
+					   state_next <= Leftshift_e;
 				end if;
 				
 				
+				--State 9/11:
+			when Leftshift_e => 
+			    LS_enable  <= '1'; --we leftshift the bits of e
+			    state_next <= read_e_bit;
+
+				
+			--State 10/11:
+			when is_out_ready =>
+			    valid_out       <= '1'; 
+				state_next      <= is_in_valid;  --we go to the first state again.
 				
 			
-			
-			
-			when others =>
-				read_a_select 	<= read_reg0;
-				read_b_select 	<= read_reg0;
-				write_select 	<= write_none;
-				valid_out 		<= '0';
-				ready_in 		<= '0';
-				opcode 			<= alu_load;
-				state_next 		<= read_2N;  --i inserted this instead of: IDLE;
+			--State 11/11:
+			when is_out_ready_last =>
+			    valid_out       <= '1';
+			    msgout_last     <= '1';             
+				state_next      <= is_in_valid;  --we go to the first state again.  
+				
+				
+			--this is a default condition, to reset if we end up in an undefined state.	
+			when others =>    
+				initialize_regs <= '0';
+		        ready_in 		<= '0';
+		        valid_out 		<= '0';
+		        is_last_msg_enable <= '0';
+		        msgout_last     <= '0';
+		        e_counter_increment <= '0';
+		        pc_select       <= '0';
+		        Blak_reset_n      <= '1';          --reset signal is normally high.
+				state_next 		<= is_in_valid;  --go to the first state next.
 		end case;
 	end process main_statem_proc;
 
@@ -155,17 +197,16 @@ begin
 	update_state : process (reset_n, clk)
 	begin
 		if (reset_n = '0') then
-			state <= read_2N;           --I put in read_2N, instead of IDLE;
+			state <= is_in_valid;           --first state.
 		elsif (rising_edge(clk)) then
 			state <= state_next;
 		end if;
 	end process update_state;
 
 
-end Behavioral;
-
-
-
 
 end Behavioral;
+
+
+
 
