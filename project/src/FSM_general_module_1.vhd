@@ -5,10 +5,28 @@
 --FSM for general module of the RSA core
 ----------------------------------------------------------------------------------
 
+-- ===============================================================
+--  PACKAGE: shared type definitions (e.g. FSM state)
+-- ===============================================================
+package mod_exp_pkg is
+	type state_type is (
+		--states associated with handshake data inn
+		is_in_valid, initialize, read_e_bit,
+		--states associated with P = P*P mod n,  and C = C*P mod n.
+		calc_C, reset_blak_module, calc_P, increment_e, is_e_processed, Leftshift_e,
+		--states associated with handshake data out
+		is_out_ready, set_msgout_last
+	);
+end package mod_exp_pkg;
+
+package body mod_exp_pkg is
+end package body mod_exp_pkg;
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
+use work.mod_exp_pkg.all; -- bring in the enum type
 
 entity controller is
 	port (
@@ -39,21 +57,17 @@ entity controller is
 		Blak_finished       : in  STD_LOGIC;    --signal that Blakley module is finished.
 		is_last_msg_enable  : out STD_LOGIC;
 		is_last_msg         : in  STD_LOGIC;
-        pc_select           : out STD_LOGIC    -- Signal for which of P or C that are using the blakley module:
+        pc_select           : out STD_LOGIC;    -- Signal for which of P or C that are using the blakley module:
+
+		-- debug
+        -- pragma translate_off
+        dbg_state : out state_type
+        -- pragma translate_on
 	);
 end controller;
 
 architecture Behavioral of controller is
-
-	type state_type is (
-		--states associated with handshake data inn
-		is_in_valid, initialize, read_e_bit,
-		--states associated with P = P*P mod n,  and C = C*P mod n.
-		calc_C, reset_blak_module, calc_P, increment_e, is_e_processed, Leftshift_e,
-		--states associated with handshake data out
-		is_out_ready, set_msgout_last
-	);
-	signal state,state_next : state_type;
+	signal state, state_next : state_type;
 begin
 
 	main_statem_proc : process (state, Blak_finished, e_counter_end, e_bit, e_counter_end, ready_out, msgin_last, valid_in, is_last_msg )
@@ -207,7 +221,9 @@ begin
 		end if;
 	end process update_state;
 
-
+	-- pragma translate_off
+    dbg_state <= state;
+    -- pragma translate_on
 
 end Behavioral;
 
