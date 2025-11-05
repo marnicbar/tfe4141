@@ -51,7 +51,7 @@ architecture Behavioral of controller is
 		--states associated with P = P*P mod n,  and C = C*P mod n.
 		calc_C, reset_blak_module, calc_P, increment_e, is_e_processed, Leftshift_e,
 		--states associated with handshake data out
-		is_out_ready, is_out_ready_last
+		is_out_ready, set_msgout_last
 	);
 	signal state,state_next : state_type;
 begin
@@ -149,14 +149,10 @@ begin
 			when is_e_processed => 
 			    e_counter_increment <= '0';
 			    Blak_reset_n        <= '1';
-			    if e_counter_end = '1' then  --"if we have gone through all the bits of e"
-			           if(is_last_msg = '1') then
-			             state_next <= is_out_ready_last;
-			           else
-			             state_next <= is_out_ready;
-			           end if;         
-					else
-					   state_next <= Leftshift_e;
+			    if (e_counter_end = '1') then  --"if we have gone through all the bits of e"
+			         state_next <= is_out_ready;
+			    else
+			         state_next <= Leftshift_e;   
 				end if;
 				
 				
@@ -169,12 +165,20 @@ begin
 			--State 10/11:
 			when is_out_ready =>
 			    valid_out       <= '1'; 
-				state_next      <= is_in_valid;  --we go to the first state again.
-				
-			
+			    if(ready_out = '1') then      --this means msgout_ready = 1              
+			         if(is_last_msg = '1') then
+			             state_next <= set_msgout_last; 
+			         else
+			             state_next <= is_in_valid;   --go to handshake inn. 
+			         end if;
+			    else
+			         state_next <= is_out_ready; --wait for handshake out.
+			    end if;
+			    
+			    
 			--State 11/11:
-			when is_out_ready_last =>
-			    valid_out       <= '1';
+			when set_msgout_last =>     --is_out_ready_last (former name)
+			    valid_out       <= '0';
 			    msgout_last     <= '1';             
 				state_next      <= is_in_valid;  --we go to the first state again.  
 				
