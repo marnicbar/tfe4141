@@ -17,7 +17,7 @@ UVVM_COMPILE_STAMP := $(UVVM_LIBS)/.compiled
 
 # Toolchain
 GHDL := ghdl
-GHDL_FLAGS := --std=08 -frelaxed -P$(UVVM_LIBS)
+GHDL_FLAGS := --std=08 -frelaxed -fsynopsys -P$(UVVM_LIBS)
 
 # Designs and testbenches
 # Blakley
@@ -26,9 +26,9 @@ TB_BLAKLEY  := $(TB_DIR)/tb_blakley.vhd
 TOP_BLAKLEY := tb_blakley
 BUILD_DIR_BLAKLEY := $(BUILD_DIR)/$(TOP_BLAKLEY)
 # Modular exponentiation
-DUT_EXP := $(SRC_DIR)/adder.vhd
-TB_EXP  := $(TB_DIR)/tb_adder_uvvm.vhd
-TOP_EXP := tb_adder_uvvm
+DUT_EXP := $(SRC_DIR)/FSM_general_module_1.vhd
+TB_EXP  := $(TB_DIR)/tb_mod_exp.vhd
+TOP_EXP := tb_mod_exp
 BUILD_DIR_EXP := $(BUILD_DIR)/$(TOP_EXP)
 
 # ============================================================
@@ -75,7 +75,7 @@ test-blakley: compile-blakley
 		exec $(BUILD_DIR_BLAKLEY)/$(TOP_BLAKLEY) --assert-level=error; \
 	fi'
 
-test-exp: compile
+test-exp: compile-exp
 	@echo "==> Running tests for modular exponentiation..."
 	@sh -c 'if $(GHDL) --version | grep -q "LLVM JIT"; then \
 		exec $(GHDL) -r $(GHDL_FLAGS) --workdir=$(BUILD_DIR_EXP) $(TOP_EXP) --assert-level=error; \
