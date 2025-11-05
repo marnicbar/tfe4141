@@ -56,7 +56,7 @@ architecture Behavioral of controller is
 	signal state,state_next : state_type;
 begin
 
-	main_statem_proc : process (state, Blak_finished, e_counter_end, e_bit, ready_out, valid_in )
+	main_statem_proc : process (state, Blak_finished, e_counter_end, e_bit, e_counter_end, ready_out, msgin_last, valid_in, is_last_msg )
 	begin
 		--default values
 		--included at the as to make it unessesarry to specify in every state
