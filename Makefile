@@ -4,7 +4,7 @@
 
 # Directories
 BUILD_DIR := build
-SRC_DIR   := project/src
+SRC_DIR   := project/RSA_accelerator/source
 TB_DIR    := project/tb
 UVVM_DIR  := UVVM
 
