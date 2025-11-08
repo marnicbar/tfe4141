@@ -46,11 +46,10 @@ begin
         set_log_destination(CONSOLE_AND_LOG);
         log(ID_LOG_HDR, "Starting UVVM blakley demo");
 
+        -- Test reset state
         reset_n <= '0';
         wait for 1 ns;
-
-        check_value(state_type'pos(dbg_state), state_type'pos(read_inputs), ERROR, "State after reset_n='0'");
-        -- check_value(dbg_state, read_inputs, "State after reset_n='0'", ERROR);
+        check_value(state_type'pos(dbg_state), state_type'pos(read_inputs), ERROR, "State after reset must be 'read_inputs'");
 
         -- Final reporting
         -- report_msg_id_panel(VOID); -- Prints enabled/disabled log IDs (optional)
