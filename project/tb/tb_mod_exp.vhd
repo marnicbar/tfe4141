@@ -39,6 +39,17 @@ architecture sim of tb_mod_exp is
     signal pc_select           : std_logic; -- Signal for which of P or C that are using the blakley module:
 
     signal dbg_state : state_type;
+    --
+    -- Helper procedure: generate a single pulse of 1 ns high then 1 ns low
+    -- Usage: call pulse_1ns(clk) to simulate one clock cycle of 2 ns period
+    procedure pulse_1ns(signal sig : out std_logic) is
+    begin
+        wait for 1 ns;
+        sig <= '1';
+        wait for 1 ns;
+        sig <= '0';
+    end procedure pulse_1ns;
+
 begin
     dut : entity work.controller
         port map(
@@ -70,10 +81,42 @@ begin
         set_log_destination(CONSOLE_AND_LOG);
         log(ID_LOG_HDR, "Starting modular exponentiation test bench");
 
-        reset_n <= '0';
+        -- Init state
+        reset_n       <= '0';
+        clk           <= '0';
+        valid_in      <= '0';
+        msgin_last    <= '0';
+        ready_out     <= '0';
+        e_bit         <= '0';
+        e_counter_end <= '0';
+        Blak_finished <= '0';
+        is_last_msg   <= '0';
         wait for 1 ns;
 
-        check_value(state_type'pos(dbg_state), state_type'pos(is_in_valid), ERROR, "State after reset_n='0'");
+        -- Test reset state
+        check_value(state_type'pos(dbg_state), state_type'pos(is_in_valid), ERROR, "State after reset must be 'is_in_valid'");
+        check_value(initialize_regs, '0', ERROR, "initialize_regs after reset must be '0'");
+        check_value(ready_in, '0', ERROR, "ready_in after reset must be '0'");
+        check_value(valid_out, '0', ERROR, "valid_out after reset must be '0'");
+        check_value(is_last_msg_enable, '0', ERROR, "is_last_msg_enable after reset must be'0'");
+        check_value(msgout_last, '0', ERROR, "msgout_last after reset must be '0'");
+        check_value(e_counter_increment, '0', ERROR, "e_counter_increment after reset must be '0'");
+        check_value(pc_select, '0', ERROR, "pc_select after reset must be '0'");
+        check_value(Blak_reset_n, '1', ERROR, "Blak_reset_n after reset must be '1'");
+
+        -- Test transition to is_in_valid state
+        reset_n  <= '1';
+        valid_in <= '1';
+        pulse_1ns(clk);
+        check_value(state_type'pos(dbg_state), state_type'pos(initialize), ERROR, "State after valid_in='1' must be 'initialize'");
+        check_value(initialize_regs, '1', ERROR, "initialize_regs must be '1' in state 'initialize'");
+        check_value(ready_in, '1', ERROR, "ready_in must be '1' in state 'initialize'");
+        check_value(valid_out, '0', ERROR, "valid_out must be '0' in state 'initialize'");
+        check_value(is_last_msg_enable, '1', ERROR, "is_last_msg_enable must be '1' in state 'initialize'");
+        check_value(msgout_last, '0', ERROR, "msgout_last must be '0' in state 'initialize'");
+        check_value(e_counter_increment, '0', ERROR, "e_counter_increment must be '0' in state 'initialize'");
+        check_value(pc_select, '0', ERROR, "pc_select must be '0' in state 'initialize'");
+        check_value(Blak_reset_n, '1', ERROR, "Blak_reset_n must be '1' in state 'initialize'");
 
         -- Final reporting
         -- report_msg_id_panel(VOID); -- Prints enabled/disabled log IDs (optional)
