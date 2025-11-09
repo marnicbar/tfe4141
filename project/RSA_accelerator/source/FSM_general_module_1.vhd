@@ -80,7 +80,9 @@ begin
 		msgout_last         <= '0';
 		e_counter_increment <= '0';
 		pc_select           <= '0';
-		Blak_reset_n        <= '1';         --reset for blakley module is normally high.
+		Blak_enable         <= '0';
+		Blak_reset_n        <= '1'; --reset for blakley module is normally high.
+		LS_enable           <= '0';
 		state_next          <= is_in_valid; --We start at this state.
 		--main implementation of statemachine
 		case(state) is
@@ -141,6 +143,7 @@ begin
 			Blak_enable         <= '0';
 			Blak_reset_n        <= '0'; -- reset blakley after updating P.
 			state_next          <= is_e_processed;
+
 			--State 8/11:
 			when is_e_processed =>
 			e_counter_increment <= '0';
@@ -150,6 +153,7 @@ begin
 			else
 				state_next <= Leftshift_e;
 			end if;
+
 			--State 9/11:
 			when Leftshift_e =>
 			LS_enable  <= '1'; --we leftshift the bits of e
