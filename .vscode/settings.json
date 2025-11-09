@@ -2,5 +2,6 @@
     "vhdl.formatter.align.all": true,
     "vhdl.formatter.insertFinalNewline": true,
     "vhdl.formatter.case.keyword": "LowerCase",
-    "vhdl.formatter.case.typename": "LowerCase"
+    "vhdl.formatter.case.typename": "LowerCase",
+    "vhdl.formatter.indentation": "    "
 }

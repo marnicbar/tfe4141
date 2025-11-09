@@ -9,7 +9,7 @@
                 "github.copilot",
                 "github.vscode-github-actions",
                 "puorc.awesome-vhdl",
-                "vinrobot.vhdl-formatter"
+                "haarigerharald.vhdl-formatter-pp"
             ],
             "settings": {
                 "terminal.integrated.defaultProfile.linux": "bash"
