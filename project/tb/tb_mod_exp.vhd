@@ -320,6 +320,27 @@ begin
         check_value(Blak_enable, '0', ERROR, "Blak_enable must be '0' in state 'set_msgout_last'");
         check_value(Blak_reset_n, '1', ERROR, "Blak_reset_n must be '1' in state 'set_msgout_last'");
 
+        -- Prepare state for reset test
+        pulse_1ns(clk);
+        valid_in <= '1';
+        pulse_1ns(clk);
+        check_value(state_type'pos(dbg_state), state_type'pos(initialize), ERROR, "State must be 'initialize'");
+
+        -- Test reset from other state than is_in_valid
+        pulse_1ns(clk);
+        reset_n <= '0';
+        pulse_1ns(clk);
+        check_value(state_type'pos(dbg_state), state_type'pos(is_in_valid), ERROR, "State must be 'is_in_valid'");
+        check_value(initialize_regs, '0', ERROR, "initialize_regs must be '0' in state 'is_in_valid'");
+        check_value(ready_in, '0', ERROR, "ready_in must be '0' in state 'is_in_valid'");
+        check_value(valid_out, '0', ERROR, "valid_out must be '1' in state 'is_in_valid'");
+        check_value(is_last_msg_enable, '0', ERROR, "is_last_msg_enable must be '0' in state 'is_in_valid'");
+        check_value(msgout_last, '0', ERROR, "msgout_last must be '0' in state 'is_in_valid'");
+        check_value(e_counter_increment, '0', ERROR, "e_counter_increment must be '1' in state 'is_in_valid'");
+        check_value(pc_select, '0', ERROR, "pc_select must be '0' in state 'is_in_valid'");
+        check_value(Blak_enable, '0', ERROR, "Blak_enable must be '0' in state 'is_in_valid'");
+        check_value(Blak_reset_n, '1', ERROR, "Blak_reset_n must be '1' in state 'is_in_valid'");
+
         -- Final reporting
         -- report_msg_id_panel(VOID); -- Prints enabled/disabled log IDs (optional)
         report_global_ctrl(VOID);
