@@ -99,7 +99,7 @@ begin
         check_value(ready_in, '0', ERROR, "ready_in after reset must be '0'");
         check_value(valid_out, '0', ERROR, "valid_out after reset must be '0'");
         check_value(is_last_msg_enable, '0', ERROR, "is_last_msg_enable after reset must be'0'");
-        -- check_value(LS_enable, '0', ERROR, "LS_enable after reset must be '0'");
+        check_value(LS_enable, '0', ERROR, "LS_enable after reset must be '0'");
         check_value(msgout_last, '0', ERROR, "msgout_last after reset must be '0'");
         check_value(e_counter_increment, '0', ERROR, "e_counter_increment after reset must be '0'");
         check_value(pc_select, '0', ERROR, "pc_select after reset must be '0'");
@@ -115,6 +115,7 @@ begin
         check_value(ready_in, '1', ERROR, "ready_in must be '1' in state 'initialize'");
         check_value(valid_out, '0', ERROR, "valid_out must be '0' in state 'initialize'");
         check_value(is_last_msg_enable, '1', ERROR, "is_last_msg_enable must be '1' in state 'initialize'");
+        check_value(LS_enable, '0', ERROR, "LS_enable must be '0' in state 'initialize'");
         check_value(msgout_last, '0', ERROR, "msgout_last must be '0' in state 'initialize'");
         check_value(e_counter_increment, '0', ERROR, "e_counter_increment must be '0' in state 'initialize'");
         check_value(pc_select, '0', ERROR, "pc_select must be '0' in state 'initialize'");
@@ -128,6 +129,7 @@ begin
         check_value(ready_in, '0', ERROR, "ready_in must be '0' in state 'read_e_bit'");
         check_value(valid_out, '0', ERROR, "valid_out must be '0' in state 'read_e_bit'");
         check_value(is_last_msg_enable, '0', ERROR, "is_last_msg_enable must be '0' in state 'read_e_bit'");
+        check_value(LS_enable, '0', ERROR, "LS_enable must be '0' in state 'read_e_bit'");
         check_value(msgout_last, '0', ERROR, "msgout_last must be '0' in state 'read_e_bit'");
         check_value(e_counter_increment, '0', ERROR, "e_counter_increment must be '0' in state 'read_e_bit'");
         check_value(pc_select, '0', ERROR, "pc_select must be '0' in state 'read_e_bit'");
@@ -142,6 +144,7 @@ begin
         check_value(ready_in, '0', ERROR, "ready_in must be '0' in state 'calc_C'");
         check_value(valid_out, '0', ERROR, "valid_out must be '0' in state 'calc_C'");
         check_value(is_last_msg_enable, '0', ERROR, "is_last_msg_enable must be '0' in state 'calc_C'");
+        check_value(LS_enable, '0', ERROR, "LS_enable must be '0' in state 'calc_C'");
         check_value(msgout_last, '0', ERROR, "msgout_last must be '0' in state 'calc_C'");
         check_value(e_counter_increment, '0', ERROR, "e_counter_increment must be '0' in state 'calc_C'");
         check_value(pc_select, '1', ERROR, "pc_select must be '1' in state 'calc_C'");
@@ -160,6 +163,7 @@ begin
         check_value(ready_in, '0', ERROR, "ready_in must be '0' in state 'reset_blak_module'");
         check_value(valid_out, '0', ERROR, "valid_out must be '0' in state 'reset_blak_module'");
         check_value(is_last_msg_enable, '0', ERROR, "is_last_msg_enable must be '0' in state 'reset_blak_module'");
+        check_value(LS_enable, '0', ERROR, "LS_enable must be '0' in state 'reset_blak_module'");
         check_value(msgout_last, '0', ERROR, "msgout_last must be '0' in state 'reset_blak_module'");
         check_value(e_counter_increment, '0', ERROR, "e_counter_increment must be '0' in state 'reset_blak_module'");
         check_value(pc_select, '0', ERROR, "pc_select must be '0' in state 'reset_blak_module'");
@@ -173,6 +177,7 @@ begin
         check_value(ready_in, '0', ERROR, "ready_in must be '0' in state 'calc_P'");
         check_value(valid_out, '0', ERROR, "valid_out must be '0' in state 'calc_P'");
         check_value(is_last_msg_enable, '0', ERROR, "is_last_msg_enable must be '0' in state 'calc_P'");
+        check_value(LS_enable, '0', ERROR, "LS_enable must be '0' in state 'calc_P'");
         check_value(msgout_last, '0', ERROR, "msgout_last must be '0' in state 'calc_P'");
         check_value(e_counter_increment, '0', ERROR, "e_counter_increment must be '0' in state 'calc_P'");
         check_value(pc_select, '0', ERROR, "pc_select must be '0' in state 'calc_P'");
@@ -192,6 +197,7 @@ begin
         check_value(ready_in, '0', ERROR, "ready_in must be '0' in state 'increment_e'");
         check_value(valid_out, '0', ERROR, "valid_out must be '0' in state 'increment_e'");
         check_value(is_last_msg_enable, '0', ERROR, "is_last_msg_enable must be '0' in state 'increment_e'");
+        check_value(LS_enable, '0', ERROR, "LS_enable must be '0' in state 'increment_e'");
         check_value(msgout_last, '0', ERROR, "msgout_last must be '0' in state 'increment_e'");
         check_value(e_counter_increment, '1', ERROR, "e_counter_increment must be '1' in state 'increment_e'");
         check_value(pc_select, '0', ERROR, "pc_select must be '0' in state 'increment_e'");
@@ -205,6 +211,7 @@ begin
         check_value(ready_in, '0', ERROR, "ready_in must be '0' in state 'is_e_processed'");
         check_value(valid_out, '0', ERROR, "valid_out must be '0' in state 'is_e_processed'");
         check_value(is_last_msg_enable, '0', ERROR, "is_last_msg_enable must be '0' in state 'is_e_processed'");
+        check_value(LS_enable, '0', ERROR, "LS_enable must be '0' in state 'is_e_processed'");
         check_value(msgout_last, '0', ERROR, "msgout_last must be '0' in state 'is_e_processed'");
         check_value(e_counter_increment, '0', ERROR, "e_counter_increment must be '1' in state 'is_e_processed'");
         check_value(pc_select, '0', ERROR, "pc_select must be '0' in state 'is_e_processed'");
@@ -219,6 +226,7 @@ begin
         check_value(ready_in, '0', ERROR, "ready_in must be '0' in state 'Leftshift_e'");
         check_value(valid_out, '0', ERROR, "valid_out must be '0' in state 'Leftshift_e'");
         check_value(is_last_msg_enable, '0', ERROR, "is_last_msg_enable must be '0' in state 'Leftshift_e'");
+        check_value(LS_enable, '1', ERROR, "LS_enable must be '1' in state 'Leftshift_e'");
         check_value(msgout_last, '0', ERROR, "msgout_last must be '0' in state 'Leftshift_e'");
         check_value(e_counter_increment, '0', ERROR, "e_counter_increment must be '1' in state 'Leftshift_e'");
         check_value(pc_select, '0', ERROR, "pc_select must be '0' in state 'Leftshift_e'");
@@ -232,6 +240,7 @@ begin
         check_value(ready_in, '0', ERROR, "ready_in must be '0' in state 'read_e_bit'");
         check_value(valid_out, '0', ERROR, "valid_out must be '0' in state 'read_e_bit'");
         check_value(is_last_msg_enable, '0', ERROR, "is_last_msg_enable must be '0' in state 'read_e_bit'");
+        check_value(LS_enable, '0', ERROR, "LS_enable must be '0' in state 'read_e_bit'");
         check_value(msgout_last, '0', ERROR, "msgout_last must be '0' in state 'read_e_bit'");
         check_value(e_counter_increment, '0', ERROR, "e_counter_increment must be '0' in state 'read_e_bit'");
         check_value(pc_select, '0', ERROR, "pc_select must be '0' in state 'read_e_bit'");
@@ -246,6 +255,7 @@ begin
         check_value(ready_in, '0', ERROR, "ready_in must be '0' in state 'calc_P'");
         check_value(valid_out, '0', ERROR, "valid_out must be '0' in state 'calc_P'");
         check_value(is_last_msg_enable, '0', ERROR, "is_last_msg_enable must be '0' in state 'calc_P'");
+        check_value(LS_enable, '0', ERROR, "LS_enable must be '0' in state 'calc_P'");
         check_value(msgout_last, '0', ERROR, "msgout_last must be '0' in state 'calc_P'");
         check_value(e_counter_increment, '0', ERROR, "e_counter_increment must be '0' in state 'calc_P'");
         check_value(pc_select, '0', ERROR, "pc_select must be '0' in state 'calc_P'");
@@ -266,6 +276,7 @@ begin
         check_value(ready_in, '0', ERROR, "ready_in must be '0' in state 'is_out_ready'");
         check_value(valid_out, '1', ERROR, "valid_out must be '1' in state 'is_out_ready'");
         check_value(is_last_msg_enable, '0', ERROR, "is_last_msg_enable must be '0' in state 'is_out_ready'");
+        check_value(LS_enable, '0', ERROR, "LS_enable must be '0' in state 'is_out_ready'");
         check_value(msgout_last, '0', ERROR, "msgout_last must be '0' in state 'is_out_ready'");
         check_value(e_counter_increment, '0', ERROR, "e_counter_increment must be '1' in state 'is_out_ready'");
         check_value(pc_select, '0', ERROR, "pc_select must be '0' in state 'is_out_ready'");
@@ -286,6 +297,7 @@ begin
         check_value(ready_in, '0', ERROR, "ready_in must be '0' in state 'is_in_valid'");
         check_value(valid_out, '0', ERROR, "valid_out must be '1' in state 'is_in_valid'");
         check_value(is_last_msg_enable, '0', ERROR, "is_last_msg_enable must be '0' in state 'is_in_valid'");
+        check_value(LS_enable, '0', ERROR, "LS_enable must be '0' in state 'is_in_valid'");
         check_value(msgout_last, '0', ERROR, "msgout_last must be '0' in state 'is_in_valid'");
         check_value(e_counter_increment, '0', ERROR, "e_counter_increment must be '1' in state 'is_in_valid'");
         check_value(pc_select, '0', ERROR, "pc_select must be '0' in state 'is_in_valid'");
@@ -314,6 +326,7 @@ begin
         check_value(ready_in, '0', ERROR, "ready_in must be '0' in state 'set_msgout_last'");
         check_value(valid_out, '0', ERROR, "valid_out must be '1' in state 'set_msgout_last'");
         check_value(is_last_msg_enable, '0', ERROR, "is_last_msg_enable must be '0' in state 'set_msgout_last'");
+        check_value(LS_enable, '0', ERROR, "LS_enable must be '0' in state 'set_msgout_last'");
         check_value(msgout_last, '1', ERROR, "msgout_last must be '0' in state 'set_msgout_last'");
         check_value(e_counter_increment, '0', ERROR, "e_counter_increment must be '1' in state 'set_msgout_last'");
         check_value(pc_select, '0', ERROR, "pc_select must be '0' in state 'set_msgout_last'");
@@ -335,6 +348,7 @@ begin
         check_value(ready_in, '0', ERROR, "ready_in must be '0' in state 'is_in_valid'");
         check_value(valid_out, '0', ERROR, "valid_out must be '1' in state 'is_in_valid'");
         check_value(is_last_msg_enable, '0', ERROR, "is_last_msg_enable must be '0' in state 'is_in_valid'");
+        check_value(LS_enable, '0', ERROR, "LS_enable must be '0' in state 'is_in_valid'");
         check_value(msgout_last, '0', ERROR, "msgout_last must be '0' in state 'is_in_valid'");
         check_value(e_counter_increment, '0', ERROR, "e_counter_increment must be '1' in state 'is_in_valid'");
         check_value(pc_select, '0', ERROR, "pc_select must be '0' in state 'is_in_valid'");
