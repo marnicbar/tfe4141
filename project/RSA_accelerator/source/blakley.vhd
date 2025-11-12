@@ -51,6 +51,11 @@ entity blakely is
         bit_width : positive := 256 -- we are working with 256 bits per word
     );
     port (
+        -- debug
+        -- pragma translate_off
+        dbg_state : out state_type;
+        -- pragma translate_on
+
         -- inputs
         A : in std_logic_vector(bit_width - 1 downto 0);
         B : in std_logic_vector(bit_width - 1 downto 0);
@@ -65,12 +70,7 @@ entity blakely is
 
         -- outputs
         Output        : out std_logic_vector(bit_width - 1 downto 0);
-        finished_calc : out std_logic;
-
-        -- debug
-        -- pragma translate_off
-        dbg_state : out state_type
-        -- pragma translate_on
+        finished_calc : out std_logic
     );
 end blakely;
 

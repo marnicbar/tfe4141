@@ -7,10 +7,10 @@ context uvvm_util.uvvm_util_context;
 
 use work.mod_exp_pkg.all; -- bring in the enum type
 
-entity tb_mod_exp is
+entity tb_mod_exp_sm is
 end entity;
 
-architecture sim of tb_mod_exp is
+architecture sim of tb_mod_exp_sm is
     --misc
     signal clk     : std_logic;
     signal reset_n : std_logic;
@@ -79,7 +79,7 @@ begin
 
     begin
         set_log_destination(CONSOLE_AND_LOG);
-        log(ID_LOG_HDR, "Starting modular exponentiation test bench");
+        log(ID_LOG_HDR, "Starting test bench for state machine of modular exponentiation...");
 
         -- Init state
         reset_n       <= '0';
