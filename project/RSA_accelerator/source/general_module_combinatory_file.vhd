@@ -179,7 +179,7 @@ begin
             if (initialize_regs = '1') then
                 LSR_e <= key; -----------WARNING: this assumes key`s LSB is also in index 0.
             elsif (LS_enable = '1') then
-                LSR_e <= std_logic_vector(shift_left(unsigned(LSR_e), 1)); -- shift left by 1 bits
+                LSR_e <= std_logic_vector(shift_right(unsigned(LSR_e), 1)); -- shift right by 1 bits, since LSB is rightmost side of LSR_e
             end if;
         end if;
     end process;
