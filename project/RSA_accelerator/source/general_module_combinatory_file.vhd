@@ -166,6 +166,9 @@ begin
                 Blak_reset_n <= '1';
             end if;
         end if;
+    end process;
+
+    process (clk) begin
         Blak_clk <= clk;
     end process;
 
@@ -174,18 +177,18 @@ begin
     -- ***************************************************************************
     process (clk, reset_n) begin
         if (reset_n = '0') then
-            LSR_e <= key; -------------WARNING: this assumes key`s LSB is also in index 0.      
+            LSR_e <= key; -------------WARNING: this assumes key`s LSB is also in index 0 on the righthand side of the register.      
         elsif (clk'event and clk = '1') then
             if (initialize_regs = '1') then
-                LSR_e <= key; -----------WARNING: this assumes key`s LSB is also in index 0.
+                LSR_e <= key; -----------WARNING: this assumes key`s LSB is also in index 0 on the righthand side of the register.
             elsif (LS_enable = '1') then
-                LSR_e <= std_logic_vector(shift_right(unsigned(LSR_e), 1)); -- shift right by 1 bits, since LSB is rightmost side of LSR_e
+                LSR_e <= std_logic_vector(shift_right(unsigned(LSR_e), 1)); -- shift right by 1 bits, since LSB is on the righthand side.
             end if;
         end if;
     end process;
 
     process (LSR_e) begin
-        e_bit <= LSR_e(0); --sends the LSB of LSR_e, to the FSM.
+        e_bit <= LSR_e(0); --sends the LSB of LSR_e, to the FSM. LSB is on the righthand side of LSR_e.
     end process;
 
     -- ***************************************************************************
