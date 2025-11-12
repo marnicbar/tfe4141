@@ -103,6 +103,7 @@ begin
             --datapath signals:
             LS_enable          => LS_enable,
             e_counter_end      => e_counter_end,
+            e_counter_increment => e_counter_increment,
             initialize_regs    => initialize_regs,
             Blak_reset_n       => Blak_reset_n,
             Blak_enable        => Blak_enable,
@@ -194,27 +195,29 @@ begin
     -- ***************************************************************************
     -- e_bit_counter, tells the FSM when we have processed all 256 bits of e.
     -- ***************************************************************************
-    process (clk, reset_n) begin
-        if (reset_n = '0') then
-            e_bit_counter <= (others => '0'); --fills vector with zero`s.
+  process (clk, reset_n)
+begin
+    if (reset_n = '0') then
+        e_bit_counter <= (others => '0');
+        e_counter_end <= '0';
+    elsif rising_edge(clk) then
+        if (initialize_regs = '1') then
+            e_bit_counter <= (others => '0');
             e_counter_end <= '0';
-        elsif (clk'event and clk = '1') then
-            if (initialize_regs = '1') then
-                e_bit_counter <= (others => '0'); --fills vector with zero`s.
+        elsif (e_counter_increment = '1') then
+            e_bit_counter <= std_logic_vector(unsigned(e_bit_counter) + 1);
+            
+            -- Check after increment if we've reached 255
+            if unsigned(e_bit_counter) = 255 then
+                e_counter_end <= '1';
+            else
                 e_counter_end <= '0';
-            elsif (e_counter_increment = '1') then
-                e_bit_counter <= std_logic_vector(unsigned(e_bit_counter) + 1);
             end if;
-        end if;
-    end process;
-
-    process (e_bit_counter) begin
-        if (unsigned(e_bit_counter) >= 255) then
-            e_counter_end <= '1';
         else
-            e_counter_end <= '0';
+            e_counter_end <= '0';  -- default
         end if;
-    end process;
+    end if;
+end process;
 
     -- ***************************************************************************
     -- is_last_msg. Being told to record the msgin_last-signal.
