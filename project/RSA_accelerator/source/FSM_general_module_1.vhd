@@ -100,15 +100,18 @@ begin
             when initialize =>
                 ready_in           <= '1'; --msgin_ready = 1
                 is_last_msg_enable <= '1'; --tell the register to hold the value "msgin_last".
-                initialize_regs    <= '1'; -- loads M into P, and '1', into C. Loads key_e into LSR_e.                 
+                initialize_regs    <= '1'; -- loads M into P, and '1', into C. Loads key_e into LSR_e. 
+                Blak_reset_n       <= '0';  --reset blak module before use.
                 state_next         <= read_e_bit;
+
                 --State 3/11:
             when read_e_bit =>
                 is_last_msg_enable <= '0';
                 ready_in           <= '0'; -- msgin_ready = 0, so that a new message is not sent to the RSA CORE.
                 initialize_regs    <= '0'; --if prev state was initialize, then we dont want to initialize anymore.
-                LS_enable          <= '0'; --if prev state was Leftshift_e, then we now stop left shifting key_e.           
-                if e_bit = '1' then --if msgin_valid = 1
+                LS_enable          <= '0'; --if prev state was Leftshift_e, then we now stop left shifting key_e. 
+                Blak_reset_n       <= '1';  --if prev state was initialize, then we stop resetting blak module now.
+                if e_bit = '1' then 
                     state_next <= calc_C; --we calculate C.
                 else
                     state_next <= calc_P; --we calculate P.
