@@ -121,13 +121,20 @@ begin
         log(ID_LOG_HDR, "Starting test bench for modular exponentiation combinatorial logic...");
 
         -- Test reset behavior
-        message <= x"9F3C7A12D84B55E0A6C1F90347BC2D8894EF01A76D52C3BB18E6F4D2A7C9E510";
+        message <= x"a5140ad17ed8ac766e0d9ab72dab049ef85efb70b71e05a947005324353db950";
+        key     <= x"33711769db52093a2521995f33d34d3602c0e038bb2b467edce7471a7be75818";
         reset_n <= '0';
         wait for 1 ns;
         check_value(P_reg, message, ERROR, "P_reg shall hold the value of message during reset.");
         check_value(C_reg, std_logic_vector(to_unsigned(1, C_reg'length)), ERROR, "C_reg shall be initialized to 1 during reset.");
         -- TODO: Test it again when Blak_reset_n is implemented correctly.
         -- check_value(Blak_reset_n, '0', ERROR, "Blak_reset_n shall be low during reset.");
+        check_value(LSR_e, key, ERROR, "LSR_e shall hold the value of key during reset.");
+        check_value(e_bit_counter, (e_bit_counter'range => '0'), ERROR, "e_bit_counter shall be zero during reset.");
+        check_value(e_counter_end, '0', ERROR, "e_counter_end shall be '0' during reset.");
+        check_value(is_last_msg, '0', ERROR, "is_last_msg shall be '0' during reset.");
+        check_value(result, std_logic_vector(to_unsigned(1, C_reg'length)), ERROR, "result shall be zero during reset.");
+        -- TODO: Are there more signals that need to be checked?
 
         -- Final reporting
         -- report_msg_id_panel(VOID); -- Prints enabled/disabled log IDs (optional)
