@@ -55,6 +55,23 @@ architecture sim of tb_mod_exp_combinatorial is
     signal Blak_enable  : std_logic; --signal that tells Blakley module to start computation.
     signal Blak_clk     : std_logic; --clock for blakley module
     signal Blak_reset_n : std_logic; --reset for blakley module. Normally high.
+
+    ---------------------------------------------------
+    -- Internal signals for debugging/testing purposes:
+    ---------------------------------------------------
+    signal LSR_e               : std_logic_vector(C_block_size - 1 downto 0); --Left shift register for key_e
+    signal P_reg               : std_logic_vector(C_block_size - 1 downto 0); --register for value P
+    signal C_reg               : std_logic_vector(C_block_size - 1 downto 0); --register for value C
+    signal pc_select           : std_logic; -- Signal to select which of P or C that are "using" the blakley module.
+    signal e_bit_counter       : std_logic_vector(counter_bit_size downto 0); --8 bit signal for a counter which the state machine uses to iterate over 256 bits of key_e.
+    signal e_counter_increment : std_logic; --tells e_counter to += 1.
+    signal e_counter_end       : std_logic; --tells FSM that we have processed all 256 bits of e.
+    signal LS_enable           : std_logic; --signal which left shifts register LSR_e
+    signal e_bit               : std_logic; --the LSB of register LSR_e
+    signal initialize_regs     : std_logic; --loads initial values into C, P, LSR_e and e_counter
+    signal is_last_msg_enable  : std_logic; --signal which tells "is_last_msg" to record the "msgin_last" signal.
+    signal is_last_msg         : std_logic; --register which = 1, if msgin_last has been high.
+
 begin
     dut : entity work.exponentiation
         port map(
@@ -81,13 +98,36 @@ begin
             Blak_n        => Blak_n,
 
             clk     => clk,
-            reset_n => reset_n
+            reset_n => reset_n,
+
+            -- Debug signals
+            dbg_LSR_e               => LSR_e,
+            dbg_P_reg               => P_reg,
+            dbg_C_reg               => C_reg,
+            dbg_pc_select           => pc_select,
+            dbg_e_bit_counter       => e_bit_counter,
+            dbg_e_counter_increment => e_counter_increment,
+            dbg_e_counter_end       => e_counter_end,
+            dbg_LS_enable           => LS_enable,
+            dbg_e_bit               => e_bit,
+            dbg_initialize_regs     => initialize_regs,
+            dbg_is_last_msg_enable  => is_last_msg_enable,
+            dbg_is_last_msg         => is_last_msg
         );
     p_seq : process
 
     begin
         set_log_destination(CONSOLE_AND_LOG);
         log(ID_LOG_HDR, "Starting test bench for modular exponentiation combinatorial logic...");
+
+        -- Test reset behavior
+        message <= x"9F3C7A12D84B55E0A6C1F90347BC2D8894EF01A76D52C3BB18E6F4D2A7C9E510";
+        reset_n <= '0';
+        wait for 1 ns;
+        check_value(P_reg, message, ERROR, "P_reg shall hold the value of message during reset.");
+        check_value(C_reg, std_logic_vector(to_unsigned(1, C_reg'length)), ERROR, "C_reg shall be initialized to 1 during reset.");
+        -- TODO: Test it again when Blak_reset_n is implemented correctly.
+        -- check_value(Blak_reset_n, '0', ERROR, "Blak_reset_n shall be low during reset.");
 
         -- Final reporting
         -- report_msg_id_panel(VOID); -- Prints enabled/disabled log IDs (optional)
