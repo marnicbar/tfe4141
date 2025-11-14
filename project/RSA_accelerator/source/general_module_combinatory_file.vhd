@@ -163,19 +163,13 @@ begin
     end process;
 
     -- ***************************************************************************
-    -- Tell blakley module to reset, if general module resets, or when we initialize the system:
+    -- clk for blakley module:
     -- ***************************************************************************
-    process (reset_n, initialize_regs) begin
-        if (reset_n = '0' or initialize_regs = '1') then --reset/initialize register P and C
-            Blak_reset_n <= '0'; --tell Blakley module to reset.
-        else
-            Blak_reset_n <= '1'; --normally high signal. Doesnt reset. 
-        end if;
-    end process;
-
     process (clk) begin
         Blak_clk <= clk;
     end process;
+
+            
 
     -- ***************************************************************************
     -- LSR_e and sending the e_bit to the FSM.
