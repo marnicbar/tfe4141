@@ -24,10 +24,25 @@ entity exponentiation is
         counter_bit_size : integer := 8 --the counter needs 8 bits, to count to 256, for the bits of e.
     );
     port (
-        --------------------------------------------------------
-        --interface from general module to outside of RSA-core:
-        ---------------------------------------------------------
+        ---------------------------------------------
+        -- Only for use in testbenches and debugging:
+        ---------------------------------------------
+        dbg_LSR_e               : out std_logic_vector(C_block_size - 1 downto 0); --Left shift register for key_e
+        dbg_P_reg               : out std_logic_vector(C_block_size - 1 downto 0); --register for value P
+        dbg_C_reg               : out std_logic_vector(C_block_size - 1 downto 0); --register for value C
+        dbg_pc_select           : out std_logic; -- Signal to select which of P or C that are "using" the blakley module.
+        dbg_e_bit_counter       : out std_logic_vector(counter_bit_size downto 0); --8 bit signal for a counter which the state machine uses to iterate over 256 bits of key_e.
+        dbg_e_counter_increment : out std_logic; --tells e_counter to += 1.
+        dbg_e_counter_end       : out std_logic; --tells FSM that we have processed all 256 bits of e.
+        dbg_LS_enable           : out std_logic; --signal which left shifts register LSR_e
+        dbg_e_bit               : out std_logic; --the LSB of register LSR_e
+        dbg_initialize_regs     : out std_logic; --loads initial values into C, P, LSR_e and e_counter
+        dbg_is_last_msg_enable  : out std_logic; --signal which tells "is_last_msg" to record the "msgin_last" signal.
+        dbg_is_last_msg         : out std_logic; --register which = 1, if msgin_last has been high.
 
+        --------------------------------------------------------
+        -- Interface from general module to outside of RSA-core:
+        --------------------------------------------------------
         --input data
         message : in std_logic_vector(C_block_size - 1 downto 0); --aka: M
         key     : in std_logic_vector(C_block_size - 1 downto 0); --aka: key_e
@@ -46,10 +61,9 @@ entity exponentiation is
         valid_out   : out std_logic; --aka: msgout_valid
         msgout_last : out std_logic;
 
-        ----------------------------------------------------
-        --interface from general module to Blakley module:---
-        -----------------------------------------------------
-
+        ---------------------------------------------------
+        -- Interface from general module to Blakley module:
+        ---------------------------------------------------
         --controll signals
         Blak_enable   : out std_logic; --signal that tells Blakley module to start computation.
         Blak_finished : in  std_logic; --signal that Blakley module is finished.
@@ -209,4 +223,19 @@ begin
         end if;
     end process;
 
+    -- Only for use in testbenches and debugging:
+    -- pragma translate_off
+    dbg_LSR_e               <= LSR_e;
+    dbg_P_reg               <= P_reg;
+    dbg_C_reg               <= C_reg;
+    dbg_pc_select           <= pc_select;
+    dbg_e_bit_counter       <= e_bit_counter;
+    dbg_e_counter_increment <= e_counter_increment;
+    dbg_e_counter_end       <= e_counter_end;
+    dbg_LS_enable           <= LS_enable;
+    dbg_e_bit               <= e_bit;
+    dbg_initialize_regs     <= initialize_regs;
+    dbg_is_last_msg_enable  <= is_last_msg_enable;
+    dbg_is_last_msg         <= is_last_msg;
+    -- pragma translate_on
 end expBehave;
