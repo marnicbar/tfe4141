@@ -19,7 +19,7 @@ use ieee.numeric_std.all;
 --In this case, this means interface towards the outside of the RSA core, 
 --and interface to the blakley module.
 entity exponentiation is
-    generic (
+    generic (--these are some constant integers we define.
         C_block_size     : integer := 256;
         counter_bit_size : integer := 8 --the counter needs 8 bits, to count to 256, for the bits of e.
     );
@@ -101,43 +101,38 @@ begin
             msgout_last => msgout_last,
 
             --datapath signals:
-            LS_enable          => LS_enable,
-            e_counter_end      => e_counter_end,
-            initialize_regs    => initialize_regs,
-            Blak_reset_n       => Blak_reset_n,
-            Blak_enable        => Blak_enable,
-            Blak_finished      => Blak_finished,
-            pc_select          => pc_select,
-            is_last_msg_enable => is_last_msg_enable,
-            is_last_msg        => is_last_msg,
-            e_bit              => e_bit
-
+            LS_enable           => LS_enable,
+            e_counter_end       => e_counter_end,
+            e_counter_increment => e_counter_increment,
+            initialize_regs     => initialize_regs,
+            Blak_reset_n        => Blak_reset_n,
+            Blak_enable         => Blak_enable,
+            Blak_finished       => Blak_finished,
+            pc_select           => pc_select,
+            is_last_msg_enable  => is_last_msg_enable,
+            is_last_msg         => is_last_msg,
+            e_bit               => e_bit
         );
 
     -- ***************************************************************************
     -- Get output from Blakley-module, and put the result in reg P or reg C:
     -- ***************************************************************************
-    process (clk, reset_n) begin
-        if (reset_n = '0') then --reset/initialize register P and C
-            P_reg    <= message; --Message M gets put in register P.
+    process (reset_n, initialize_regs, Blak_finished, pc_select) begin
+        if (reset_n = '0' or initialize_regs = '1') then -- reset/initialize register P and C
+            P_reg    <= message; -- Message M gets put in register P.
             C_reg    <= (others => '0');
             C_reg(0) <= '1'; -- value [000...001] gets put into register C.
-        elsif (clk'event and clk = '1') then
+        else
             if (pc_select = '0' and Blak_finished = '1') then
                 P_reg <= Blak_C;
             elsif (pc_select = '1' and Blak_finished = '1') then
                 C_reg <= Blak_C;
             end if;
-            if (initialize_regs = '1') then
-                P_reg    <= message; --Message M gets put in register P.
-                C_reg    <= (others => '0');
-                C_reg(0) <= '1'; -- value [000...001] gets put into register C.
-            end if;
         end if;
     end process;
 
     process (C_reg) begin
-        result <= C_reg; --msg_out.
+        result <= C_reg; --result = msg_out.
     end process;
 
     -- ***************************************************************************
@@ -154,17 +149,13 @@ begin
     end process;
 
     -- ***************************************************************************
-    -- Tell blakley module to reset, if general module resets, or we initialize the system:
+    -- Tell blakley module to reset, if general module resets, or when we initialize the system:
     -- ***************************************************************************
-    process (clk, reset_n) begin
-        if (reset_n = '0') then --reset/initialize register P and C
+    process (reset_n, initialize_regs) begin
+        if (reset_n = '0' or initialize_regs = '1') then --reset/initialize register P and C
             Blak_reset_n <= '0'; --tell Blakley module to reset.
-        elsif (clk'event and clk = '1') then
-            if (initialize_regs = '1') then
-                Blak_reset_n <= '0';
-            else
-                Blak_reset_n <= '1';
-            end if;
+        else
+            Blak_reset_n <= '1'; --normally high signal. Doesnt reset. 
         end if;
     end process;
 
@@ -175,15 +166,11 @@ begin
     -- ***************************************************************************
     -- LSR_e and sending the e_bit to the FSM.
     -- ***************************************************************************
-    process (clk, reset_n) begin
-        if (reset_n = '0') then
+    process (reset_n, initialize_regs, LS_enable) begin
+        if (reset_n = '0' or initialize_regs = '1') then
             LSR_e <= key; -------------WARNING: this assumes key`s LSB is also in index 0 on the righthand side of the register.      
-        elsif (clk'event and clk = '1') then
-            if (initialize_regs = '1') then
-                LSR_e <= key; -----------WARNING: this assumes key`s LSB is also in index 0 on the righthand side of the register.
-            elsif (LS_enable = '1') then
-                LSR_e <= std_logic_vector(shift_right(unsigned(LSR_e), 1)); -- shift right by 1 bits, since LSB is on the righthand side.
-            end if;
+        elsif (LS_enable = '1') then
+            LSR_e <= std_logic_vector(shift_right(unsigned(LSR_e), 1)); -- shift right by 1 bits, since LSB is on the righthand side.
         end if;
     end process;
 
@@ -194,22 +181,17 @@ begin
     -- ***************************************************************************
     -- e_bit_counter, tells the FSM when we have processed all 256 bits of e.
     -- ***************************************************************************
-    process (clk, reset_n) begin
-        if (reset_n = '0') then
+    process (reset_n, initialize_regs) begin
+        if (reset_n = '0' or initialize_regs = '1') then
             e_bit_counter <= (others => '0'); --fills vector with zero`s.
             e_counter_end <= '0';
-        elsif (clk'event and clk = '1') then
-            if (initialize_regs = '1') then
-                e_bit_counter <= (others => '0'); --fills vector with zero`s.
-                e_counter_end <= '0';
-            elsif (e_counter_increment = '1') then
-                e_bit_counter <= std_logic_vector(unsigned(e_bit_counter) + 1);
-            end if;
+        elsif (e_counter_increment = '1') then
+            e_bit_counter <= std_logic_vector(unsigned(e_bit_counter) + 1);
         end if;
     end process;
 
     process (e_bit_counter) begin
-        if (unsigned(e_bit_counter) >= 255) then
+        if (unsigned(e_bit_counter) >= 255) then --this condition means we have processed all bits of e.
             e_counter_end <= '1';
         else
             e_counter_end <= '0';
@@ -219,13 +201,11 @@ begin
     -- ***************************************************************************
     -- is_last_msg. Being told to record the msgin_last-signal.
     -- ***************************************************************************
-    process (clk, reset_n) begin
+    process (reset_n, is_last_msg_enable) begin
         if (reset_n = '0') then
             is_last_msg <= '0';
-        elsif (clk'event and clk = '1') then
-            if (is_last_msg_enable = '1') then
-                is_last_msg <= msgin_last;
-            end if;
+        elsif (is_last_msg_enable = '1') then
+            is_last_msg <= msgin_last;
         end if;
     end process;
 
