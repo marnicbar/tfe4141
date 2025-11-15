@@ -6,6 +6,7 @@ library uvvm_util;
 context uvvm_util.uvvm_util_context;
 
 use work.mod_exp_pkg.all; -- bring in the enum type
+use work.helpers_pkg.all; -- bring in the pulse_1ns procedure
 
 entity tb_mod_exp_sm is
 end entity;
@@ -39,17 +40,6 @@ architecture sim of tb_mod_exp_sm is
     signal pc_select           : std_logic; -- Signal for which of P or C that are using the blakley module:
 
     signal dbg_state : state_type;
-    --
-    -- Helper procedure: generate a single pulse of 1 ns high then 1 ns low
-    -- Usage: call pulse_1ns(clk) to simulate one clock cycle of 2 ns period
-    procedure pulse_1ns(signal sig : out std_logic) is
-    begin
-        wait for 1 ns;
-        sig <= '1';
-        wait for 1 ns;
-        sig <= '0';
-    end procedure pulse_1ns;
-
 begin
     dut : entity work.controller
         port map(

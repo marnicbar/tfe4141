@@ -6,6 +6,7 @@ library uvvm_util;
 context uvvm_util.uvvm_util_context;
 
 use work.mod_exp_pkg.all; -- bring in the enum type
+use work.helpers_pkg.all; -- bring in the pulse_1ns procedure
 
 entity tb_mod_exp_combinatorial is
 end entity;
@@ -133,6 +134,23 @@ begin
         check_value(is_last_msg, '0', ERROR, "is_last_msg shall be '0' during reset.");
         check_value(result, std_logic_vector(to_unsigned(1, C_reg'length)), ERROR, "result shall be zero during reset.");
         -- TODO: Are there more signals that need to be checked?
+
+        -- -- Test initialization behavior
+        -- reset_n <= '1';
+        -- initialize_regs <= '1';
+        -- wait for 1 ns;
+        -- check_value(P_reg, message, ERROR, "P_reg shall hold the value of message when initialize_regs = '1'.");
+        -- check_value(C_reg, std_logic_vector(to_unsigned(1, C_reg'length)), ERROR, "C_reg shall be 1 when initialize_regs = '1'.");
+        -- check_value(LSR_e, key, ERROR, "LSR_e shall hold the value of key when initialize_regs = '1'.");
+        -- check_value(e_bit_counter, (e_bit_counter'range => '0'), ERROR, "e_bit_counter shall be zero when initialize_regs = '1'.");
+        -- check_value(e_counter_end, '0', ERROR, "e_counter_end shall be '0' when initialize_regs = '1'.");
+
+        reset_n  <= '1';
+        valid_in <= '1';
+        message  <= std_logic_vector(to_unsigned(7, message'length));
+        key      <= std_logic_vector(to_unsigned(3, key'length)); -- Exponent 
+        modulus  <= std_logic_vector(to_unsigned(55, modulus'length));
+        pulse_1ns(clk);
 
         -- Final reporting
         -- report_msg_id_panel(VOID); -- Prints enabled/disabled log IDs (optional)
