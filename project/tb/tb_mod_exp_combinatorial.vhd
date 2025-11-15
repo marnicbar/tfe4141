@@ -127,8 +127,6 @@ begin
         wait for 1 ns;
         check_value(P_reg, message, ERROR, "P_reg shall hold the value of message during reset.");
         check_value(C_reg, std_logic_vector(to_unsigned(1, C_reg'length)), ERROR, "C_reg shall be initialized to 1 during reset.");
-        -- TODO: Test it again when Blak_reset_n is implemented correctly.
-        -- check_value(Blak_reset_n, '0', ERROR, "Blak_reset_n shall be low during reset.");
         check_value(LSR_e, key, ERROR, "LSR_e shall hold the value of key during reset.");
         check_value(e_bit_counter, (e_bit_counter'range => '0'), ERROR, "e_bit_counter shall be zero during reset.");
         check_value(e_counter_end, '0', ERROR, "e_counter_end shall be '0' during reset.");
