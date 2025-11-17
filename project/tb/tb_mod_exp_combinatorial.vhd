@@ -164,8 +164,8 @@ begin
         Blak_C        <= std_logic_vector(to_unsigned(7, Blak_C'length)); -- 7 * 1 mod 55 = 7
         Blak_finished <= '1';
         pulse_1ns(clk);
-        check_value(C_reg, std_logic_vector(to_unsigned(7, C_reg'length)), ERROR, "C_reg must hold correct value after calculating C.");
         check_value(P_reg, std_logic_vector(to_unsigned(7, P_reg'length)), ERROR, "P_reg must hold previous value when calculating C.");
+        check_value(C_reg, std_logic_vector(to_unsigned(7, C_reg'length)), ERROR, "C_reg must hold correct value after calculating C.");
 
         -- Calc P
         Blak_finished <= '0';
@@ -179,8 +179,58 @@ begin
         Blak_C        <= std_logic_vector(to_unsigned(49, Blak_C'length)); -- 7 * 7 mod 55 = 49
         Blak_finished <= '1';
         pulse_1ns(clk);
-        check_value(C_reg, std_logic_vector(to_unsigned(7, C_reg'length)), ERROR, "C_reg must hold previous value after calculating P.");
         check_value(P_reg, std_logic_vector(to_unsigned(49, C_reg'length)), ERROR, "P_reg must hold correct value after calculating C.");
+        check_value(C_reg, std_logic_vector(to_unsigned(7, C_reg'length)), ERROR, "C_reg must hold previous value after calculating P.");
+        check_value(e_bit_counter, std_logic_vector(to_unsigned(1, e_bit_counter'length)), ERROR, "e_bit_counter must be incremented after processing one bit.");
+
+        -- Increment e counter
+        Blak_finished <= '0';
+        pulse_1ns(clk);
+        check_value(e_counter_end, '0', ERROR, "e_counter_end must be '0' after processing one bit.");
+
+        -- Leftshift e
+        pulse_1ns(clk);
+        check_value(e_bit, '1', ERROR, "e_bit must be updated to new LSB of LSR_e after shift.");
+
+        -- Calc C
+        pulse_1ns(clk);
+        pulse_1ns(clk); -- Two clocks to get to state calc_C
+        -- check_value(Blak_enable, '1', ERROR, "Blak_enable must be '1' to start calculation of C.");
+        -- check_value(pc_select, '1', ERROR, "pc_select must be '1' when calculating C.");
+        check_value(Blak_A, std_logic_vector(to_unsigned(49, Blak_A'length)), ERROR, "Blak_A must be P_reg value when calculating C.");
+        check_value(Blak_B, std_logic_vector(to_unsigned(7, Blak_B'length)), ERROR, "Blak_B must be C_reg value when calculating C.");
+
+        -- Simulate Blakley module finishing calculation
+        Blak_C        <= std_logic_vector(to_unsigned(13, Blak_C'length)); -- 49 * 7 mod 55 = 13
+        Blak_finished <= '1';
+        pulse_1ns(clk);
+        check_value(P_reg, std_logic_vector(to_unsigned(49, P_reg'length)), ERROR, "P_reg must hold previous value when calculating C.");
+        check_value(C_reg, std_logic_vector(to_unsigned(13, C_reg'length)), ERROR, "C_reg must hold correct value after calculating C.");
+
+        -- -- Calc P
+        -- Blak_finished <= '0';
+        -- pulse_1ns(clk);
+        -- check_value(P_reg, std_logic_vector(to_unsigned(7, P_reg'length)), ERROR, "P_reg must hold previous value when calculating P.");
+        -- check_value(C_reg, std_logic_vector(to_unsigned(7, C_reg'length)), ERROR, "C_reg must be previous C_reg when calculating P.");
+        -- check_value(Blak_A, std_logic_vector(to_unsigned(7, Blak_A'length)), ERROR, "Blak_A must be P_reg value when calculating P.");
+        -- check_value(Blak_B, std_logic_vector(to_unsigned(7, Blak_B'length)), ERROR, "Blak_B must be C_reg value when calculating P.");
+
+        -- -- Simulate Blakley module finishing calculation
+        -- Blak_C        <= std_logic_vector(to_unsigned(49, Blak_C'length)); -- 7 * 7 mod 55 = 49
+        -- Blak_finished <= '1';
+        -- pulse_1ns(clk);
+        -- check_value(C_reg, std_logic_vector(to_unsigned(7, C_reg'length)), ERROR, "C_reg must hold previous value after calculating P.");
+        -- check_value(P_reg, std_logic_vector(to_unsigned(49, C_reg'length)), ERROR, "P_reg must hold correct value after calculating C.");
+        -- check_value(e_bit_counter, std_logic_vector(to_unsigned(1, e_bit_counter'length)), ERROR, "e_bit_counter must be incremented after processing one bit.");
+
+        -- -- Increment e counter
+        -- Blak_finished <= '0';
+        -- pulse_1ns(clk);
+        -- check_value(e_counter_end, '0', ERROR, "e_counter_end must be '0' after processing one bit.");
+
+        -- -- Leftshift e
+        -- pulse_1ns(clk);
+        -- check_value(e_bit, '1', ERROR, "e_bit must be updated to new LSB of LSR_e after shift.");
 
         -- Final reporting
         -- report_msg_id_panel(VOID); -- Prints enabled/disabled log IDs (optional)

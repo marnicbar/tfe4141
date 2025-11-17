@@ -131,16 +131,18 @@ begin
     -- ***************************************************************************
     -- Get output from Blakley-module, and put the result in reg P or reg C:
     -- ***************************************************************************
-    process (reset_n, initialize_regs, Blak_finished, pc_select) begin
+    process (reset_n, initialize_regs, Blak_finished, pc_select, clk) begin
         if (reset_n = '0' or initialize_regs = '1') then -- reset/initialize register P and C
             P_reg    <= message; -- Message M gets put in register P.
             C_reg    <= (others => '0');
             C_reg(0) <= '1'; -- value [000...001] gets put into register C.
         else
-            if (pc_select = '0' and Blak_finished = '1') then
-                P_reg <= Blak_C;
-            elsif (pc_select = '1' and Blak_finished = '1') then
-                C_reg <= Blak_C;
+            if (rising_edge(clk) and Blak_finished = '1') then
+                if (pc_select = '0') then
+                    P_reg <= Blak_C;
+                elsif (pc_select = '1') then
+                    C_reg <= Blak_C;
+                end if;
             end if;
         end if;
     end process;
@@ -169,8 +171,6 @@ begin
         Blak_clk <= clk;
     end process;
 
-            
-
     -- ***************************************************************************
     -- LSR_e and sending the e_bit to the FSM.
     -- ***************************************************************************
@@ -189,19 +189,19 @@ begin
     -- ***************************************************************************
     -- e_bit_counter, tells the FSM when we have processed all 256 bits of e.
     -- ***************************************************************************
-process (reset_n, initialize_regs, e_counter_increment) begin
-    if(reset_n = '0' or initialize_regs ='1') then     
-      e_bit_counter <= (others => '0');  --fills vector with zero`s.
-      e_counter_end  <= '0';        
-    elsif(e_counter_increment = '1') then
+    process (reset_n, initialize_regs, e_counter_increment) begin
+        if (reset_n = '0' or initialize_regs = '1') then
+            e_bit_counter <= (others => '0'); --fills vector with zero`s.
+            e_counter_end <= '0';
+        elsif (e_counter_increment = '1') then
             e_bit_counter <= std_logic_vector(unsigned(e_bit_counter) + 1);
-    end if;
-    if (unsigned(e_bit_counter) >= 255) then     --this condition means we have processed all bits of e.
-            e_counter_end  <= '1';               
-        else
-            e_counter_end  <= '0'; 
         end if;
-  end process;
+        if (unsigned(e_bit_counter) >= 255) then --this condition means we have processed all bits of e.
+            e_counter_end <= '1';
+        else
+            e_counter_end <= '0';
+        end if;
+    end process;
 
     -- ***************************************************************************
     -- is_last_msg. Being told to record the msgin_last-signal.
