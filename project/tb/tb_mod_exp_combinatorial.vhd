@@ -122,6 +122,7 @@ begin
         log(ID_LOG_HDR, "Starting test bench for modular exponentiation combinatorial logic...");
 
         -- Test reset behavior
+        clk     <= '0';
         message <= x"a5140ad17ed8ac766e0d9ab72dab049ef85efb70b71e05a947005324353db950";
         key     <= x"33711769db52093a2521995f33d34d3602c0e038bb2b467edce7471a7be75818";
         reset_n <= '0';
@@ -135,22 +136,51 @@ begin
         check_value(result, std_logic_vector(to_unsigned(1, C_reg'length)), ERROR, "result shall be zero during reset.");
         -- TODO: Are there more signals that need to be checked?
 
-        -- -- Test initialization behavior
-        -- reset_n <= '1';
-        -- initialize_regs <= '1';
-        -- wait for 1 ns;
-        -- check_value(P_reg, message, ERROR, "P_reg shall hold the value of message when initialize_regs = '1'.");
-        -- check_value(C_reg, std_logic_vector(to_unsigned(1, C_reg'length)), ERROR, "C_reg shall be 1 when initialize_regs = '1'.");
-        -- check_value(LSR_e, key, ERROR, "LSR_e shall hold the value of key when initialize_regs = '1'.");
-        -- check_value(e_bit_counter, (e_bit_counter'range => '0'), ERROR, "e_bit_counter shall be zero when initialize_regs = '1'.");
-        -- check_value(e_counter_end, '0', ERROR, "e_counter_end shall be '0' when initialize_regs = '1'.");
-
+        -- Load test values
         reset_n  <= '1';
         valid_in <= '1';
         message  <= std_logic_vector(to_unsigned(7, message'length));
         key      <= std_logic_vector(to_unsigned(3, key'length)); -- Exponent 
         modulus  <= std_logic_vector(to_unsigned(55, modulus'length));
+
+        -- First clock to set initialize_regs
         pulse_1ns(clk);
+        check_value(initialize_regs, '1', ERROR, "initialize_regs must be '1' after valid_in pulse.");
+        check_value(LSR_e, key, ERROR, "LSR_e shall be loaded with key after valid_in pulse.");
+        check_value(P_reg, message, ERROR, "P_reg shall be loaded with message after valid_in pulse.");
+        check_value(C_reg, std_logic_vector(to_unsigned(1, C_reg'length)), ERROR, "C_reg shall be initialized to 1 after valid_in pulse.");
+        check_value(e_bit_counter, (e_bit_counter'range => '0'), ERROR, "e_bit_counter shall be zero after valid_in pulse.");
+        check_value(e_bit, '1', ERROR, "e_bit shall be LSB of LSR_e after first shift.");
+
+        -- Calc C
+        pulse_1ns(clk);
+        pulse_1ns(clk); -- Two clocks to get to state calc_C
+        check_value(Blak_enable, '1', ERROR, "Blak_enable must be '1' to start calculation of C.");
+        check_value(pc_select, '1', ERROR, "pc_select must be '1' when calculating C.");
+        check_value(Blak_A, std_logic_vector(to_unsigned(7, Blak_A'length)), ERROR, "Blak_A must be P_reg value when calculating C.");
+        check_value(Blak_B, std_logic_vector(to_unsigned(1, Blak_B'length)), ERROR, "Blak_B must be C_reg value when calculating C.");
+
+        -- Simulate Blakley module finishing calculation
+        Blak_C        <= std_logic_vector(to_unsigned(7, Blak_C'length)); -- 7 * 1 mod 55 = 7
+        Blak_finished <= '1';
+        pulse_1ns(clk);
+        check_value(C_reg, std_logic_vector(to_unsigned(7, C_reg'length)), ERROR, "C_reg must hold correct value after calculating C.");
+        check_value(P_reg, std_logic_vector(to_unsigned(7, P_reg'length)), ERROR, "P_reg must hold previous value when calculating C.");
+
+        -- Calc P
+        Blak_finished <= '0';
+        pulse_1ns(clk);
+        check_value(P_reg, std_logic_vector(to_unsigned(7, P_reg'length)), ERROR, "P_reg must hold previous value when calculating P.");
+        check_value(C_reg, std_logic_vector(to_unsigned(7, C_reg'length)), ERROR, "C_reg must be previous C_reg when calculating P.");
+        check_value(Blak_A, std_logic_vector(to_unsigned(7, Blak_A'length)), ERROR, "Blak_A must be P_reg value when calculating P.");
+        check_value(Blak_B, std_logic_vector(to_unsigned(7, Blak_B'length)), ERROR, "Blak_B must be C_reg value when calculating P.");
+
+        -- Simulate Blakley module finishing calculation
+        Blak_C        <= std_logic_vector(to_unsigned(49, Blak_C'length)); -- 7 * 7 mod 55 = 49
+        Blak_finished <= '1';
+        pulse_1ns(clk);
+        check_value(C_reg, std_logic_vector(to_unsigned(7, C_reg'length)), ERROR, "C_reg must hold previous value after calculating P.");
+        check_value(P_reg, std_logic_vector(to_unsigned(49, C_reg'length)), ERROR, "P_reg must hold correct value after calculating C.");
 
         -- Final reporting
         -- report_msg_id_panel(VOID); -- Prints enabled/disabled log IDs (optional)

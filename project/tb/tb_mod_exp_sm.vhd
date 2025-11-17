@@ -96,7 +96,7 @@ begin
         check_value(Blak_enable, '0', ERROR, "Blak_enable after reset must be '0'");
         check_value(Blak_reset_n, '1', ERROR, "Blak_reset_n after reset must be '1'");
 
-        -- Test transition to is_in_valid state
+        -- Test transition to initialize state
         reset_n  <= '1';
         valid_in <= '1';
         pulse_1ns(clk);
@@ -110,7 +110,7 @@ begin
         check_value(e_counter_increment, '0', ERROR, "e_counter_increment must be '0' in state 'initialize'");
         check_value(pc_select, '0', ERROR, "pc_select must be '0' in state 'initialize'");
         check_value(Blak_enable, '0', ERROR, "Blak_enable must be '0' in state 'initialize'");
-        check_value(Blak_reset_n, '0', ERROR, "Blak_reset_n must be '1' in state 'initialize'");
+        check_value(Blak_reset_n, '0', ERROR, "Blak_reset_n must be '0' in state 'initialize'");
 
         -- Test transition to read_e_bit state
         pulse_1ns(clk);
