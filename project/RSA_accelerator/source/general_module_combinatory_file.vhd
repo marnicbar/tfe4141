@@ -189,22 +189,19 @@ begin
     -- ***************************************************************************
     -- e_bit_counter, tells the FSM when we have processed all 256 bits of e.
     -- ***************************************************************************
-    process (reset_n, initialize_regs) begin
-        if (reset_n = '0' or initialize_regs = '1') then
-            e_bit_counter <= (others => '0'); --fills vector with zero`s.
-            e_counter_end <= '0';
-        elsif (e_counter_increment = '1') then
+process (reset_n, initialize_regs, e_counter_increment) begin
+    if(reset_n = '0' or initialize_regs ='1') then     
+      e_bit_counter <= (others => '0');  --fills vector with zero`s.
+      e_counter_end  <= '0';        
+    elsif(e_counter_increment = '1') then
             e_bit_counter <= std_logic_vector(unsigned(e_bit_counter) + 1);
-        end if;
-    end process;
-
-    process (e_bit_counter) begin
-        if (unsigned(e_bit_counter) >= 255) then --this condition means we have processed all bits of e.
-            e_counter_end <= '1';
+    end if;
+    if (unsigned(e_bit_counter) >= 255) then     --this condition means we have processed all bits of e.
+            e_counter_end  <= '1';               
         else
-            e_counter_end <= '0';
+            e_counter_end  <= '0'; 
         end if;
-    end process;
+  end process;
 
     -- ***************************************************************************
     -- is_last_msg. Being told to record the msgin_last-signal.
