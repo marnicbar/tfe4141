@@ -21,7 +21,7 @@ entity blakely_datapath is
         add_en         : in std_logic;
         sub1_en        : in std_logic;
         sub2_en        : in std_logic;
-        do_store_shift : in std_logic;  -- <<<<< add this
+        do_store_shift : in std_logic;
         output_en      : in std_logic;
 
         -- Feedback to FSM
@@ -35,55 +35,67 @@ entity blakely_datapath is
 end blakely_datapath;
 
 architecture behavioral of blakely_datapath is
-    signal reg_a, reg_b, reg_n, reg_temp, reg_out : unsigned(bit_width - 1 downto 0);
-    signal temp_sub : unsigned(bit_width downto 0);
+    signal reg_a, reg_b, reg_n, reg_temp, reg_out : unsigned(bit_width - 1 downto 0) := (others => '0');
+    signal temp_sub : unsigned(bit_width downto 0) := (others => '0');
+    signal next_temp : unsigned(bit_width - 1 downto 0);
 begin
 
     process(clk, reset_n)
-    begin
-        if reset_n = '0' then
-            reg_a    <= (others => '0');
-            reg_b    <= (others => '0');
-            reg_n    <= (others => '0');
-            reg_temp <= (others => '0');
-            reg_out  <= (others => '0');
-        elsif rising_edge(clk) then
-            if load_inputs = '1' then
-                reg_a <= unsigned(A);
-                reg_b <= unsigned(B);
-                reg_n <= unsigned(N);
-                reg_temp <= (others => '0');
-            end if;
+    variable next_temp : unsigned(bit_width - 1 downto 0);
+begin
+    if reset_n = '0' then
+        reg_a    <= (others => '0');
+        reg_b    <= (others => '0');
+        reg_n    <= (others => '0');
+        reg_temp <= (others => '0');
+        reg_out  <= (others => '0');
+    elsif rising_edge(clk) then
 
-            if shift_a = '1' then
-                reg_a <= reg_a(bit_width - 2 downto 0) & '0';
-            end if;
+        -- Initialize variable
+        next_temp := reg_temp;
 
-            if add_en = '1' then
-                reg_temp <= reg_temp + reg_b;
-            end if;
-
-            if sub1_en = '1' then
-                reg_temp <= temp_sub(bit_width - 1 downto 0);
-            end if;
-
-            if sub2_en = '1' then
-                reg_temp <= temp_sub(bit_width - 1 downto 0);
-            end if;
-
-            if do_store_shift = '1' then
-                reg_out  <= reg_temp;
-                reg_temp <= reg_temp(bit_width - 2 downto 0) & '0';
-            end if;
-
-            if output_en = '1' then
-                reg_out <= reg_temp;
-            end if;
+        -- Load inputs
+        if load_inputs = '1' then
+            reg_a    <= unsigned(A);
+            reg_b    <= unsigned(B);
+            reg_n    <= unsigned(N);
+            next_temp := (others => '0');
         end if;
-    end process;
 
-    -- combinational
-    a_msb  <= reg_a(bit_width - 1);
+        -- Shift A left
+        if shift_a = '1' then
+            reg_a <= reg_a(bit_width - 2 downto 0) & '0';
+        end if;
+
+        -- Conditional addition
+        if add_en = '1' and a_msb = '1' then
+            next_temp := next_temp + reg_b;
+        end if;
+
+        -- Modular subtractions
+        if sub1_en = '1' or sub2_en = '1' then
+            next_temp := temp_sub(bit_width - 1 downto 0);
+        end if;
+
+        -- Store temp and shift right
+        if do_store_shift = '1' then
+            reg_out <= next_temp;
+            next_temp := '0' & next_temp(bit_width - 1 downto 1);
+        end if;
+
+        -- Output final result
+        if output_en = '1' then
+            reg_out <= next_temp;
+        end if;
+
+        -- Update reg_temp at end of clock cycle
+        reg_temp <= next_temp;
+
+    end if;
+end process;
+
+    -- Combinational feedback for FSM
+    a_msb  <= reg_a(0);  -- LSB for small numbers
     temp_sub <= ('0' & reg_temp) - ('0' & reg_n);
     gt_n_1 <= not temp_sub(bit_width);  -- '1' if reg_temp >= N
     gt_n_2 <= not temp_sub(bit_width);

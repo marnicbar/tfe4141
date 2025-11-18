@@ -1,0 +1,179 @@
+==> Compiling Datapath testbench for Blakley...
+ghdl -a --std=08 -frelaxed -fsynopsys -Pghdl --workdir=build/tb_blakley_datapath project/RSA_accelerator/source/blakely_datapath.vhd
+ghdl -a --std=08 -frelaxed -fsynopsys -Pghdl --workdir=build/tb_blakley_datapath project/tb/tb_blakley_datapath.vhd
+ghdl -e --std=08 -frelaxed -fsynopsys -Pghdl --workdir=build/tb_blakley_datapath -o build/tb_blakley_datapath/tb_blakley_datapath tb_blakley_datapath
+==> Running datapath testbench for Blakley...
+/workspaces/tfe4141/UVVM/uvvm_util/src/license_pkg.vhd:56:5:@0ms:(report note): 
+
+
+*****************************************************************************************************
+ This is a *** LICENSED PRODUCT *** as given in the LICENSE.TXT in the root directory.
+*****************************************************************************************************
+
+
+UVVM: ID_LOG_MSG_CTRL                    0.0 ns  TB seq.                        Changing log destination to console_and_log. Was console_and_log. 
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                         0.0 ns  TB seq.                        Starting focused datapath testbench (load/add/sub/shift/store checks)
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                         5.0 ns  TB seq.                        T=5000000 fs a_msb='0' gt1='1' gt2='1' load='0' add='0' sub1='0' store_shift='0' out_en='0'
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UVVM: ID_POS_ACK                        45.0 ns  TB seq.                        check_value() => OK, for boolean true. 'After load, Output should be 0'
+UVVM: ID_POS_ACK                        85.0 ns  TB seq.                        check_value() => OK, for boolean true. 'After add_en and output_en, Output should be 3'
+UVVM: ID_POS_ACK                        85.0 ns  TB seq.                        check_value() => OK, for boolean true. 'gt_n_1 should be '1' when reg_temp >= N'
+UVVM: ID_POS_ACK                        85.0 ns  TB seq.                        check_value() => OK, for boolean true. 'gt_n_2 should be '1' when reg_temp >= N'
+UVVM: ID_POS_ACK                       125.0 ns  TB seq.                        check_value() => OK, for boolean true. 'After subtraction and output_en, Output should be 1'
+UVVM: ID_POS_ACK                       125.0 ns  TB seq.                        check_value() => OK, for boolean true. 'gt_n_1 should be '0' when reg_temp < N'
+UVVM: ID_POS_ACK                       125.0 ns  TB seq.                        check_value() => OK, for boolean true. 'gt_n_2 should be '0' when reg_temp < N'
+UVVM: ID_POS_ACK                       145.0 ns  TB seq.                        check_value() => OK, for boolean true. 'After do_store_shift, Output should hold previous
+UVVM:                                                                           reg_temp (1)'
+UVVM: ID_POS_ACK                       145.0 ns  TB seq.                        check_value() => OK, for boolean true. 'After shift, reg_temp=2, so reg_temp >= N ->
+UVVM:                                                                           gt_n_1='1''
+UVVM: ID_POS_ACK                       145.0 ns  TB seq.                        check_value() => OK, for boolean true. 'After shift, reg_temp=2, so reg_temp >= N ->
+UVVM:                                                                           gt_n_2='1''
+UVVM: ID_POS_ACK                       165.0 ns  TB seq.                        check_value() => OK, for boolean true. 'a_msb should be '0' after single shift of small A'
+UVVM: ID_POS_ACK                       185.0 ns  TB seq.                        check_value() => OK, for boolean true. 'a_msb should be '1' when MSB of A is set'
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                       185.0 ns  TB seq.                        Datapath checks executed
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+simulation stopped @185ns
+==> Compiling FSM testbench for Blakley...
+ghdl -a --std=08 -frelaxed -fsynopsys -Pghdl --workdir=build/tb_blakely_fsm project/RSA_accelerator/source/blakely_fsm.vhd
+ghdl -a --std=08 -frelaxed -fsynopsys -Pghdl --workdir=build/tb_blakely_fsm project/tb/tb_blakley_fsm.vhd
+ghdl -e --std=08 -frelaxed -fsynopsys -Pghdl --workdir=build/tb_blakely_fsm -o build/tb_blakely_fsm/tb_blakely_fsm tb_blakely_fsm
+==> Running FSM testbench for Blakley...
+/workspaces/tfe4141/UVVM/uvvm_util/src/license_pkg.vhd:56:5:@0ms:(report note): 
+
+
+*****************************************************************************************************
+ This is a *** LICENSED PRODUCT *** as given in the LICENSE.TXT in the root directory.
+*****************************************************************************************************
+
+
+UVVM: ID_LOG_MSG_CTRL                    0.0 ns  TB seq.                        Changing log destination to console_and_log. Was console_and_log. 
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                         0.0 ns  TB seq.                        Starting focused FSM test (checking read->initial_shifting first)
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                         5.0 ns  TB seq.                        T=5000000 fs state=0 bn_en='0' a_msb='0' gt1='0' gt2='0' do_store='0' finished='0'
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UVVM: ID_POS_ACK                        25.0 ns  TB seq.                        check_value() => OK, for boolean true. 'FSM should be in read_inputs after reset (0)'
+UVVM: ID_POS_ACK                        45.0 ns  TB seq.                        check_value() => OK, for boolean true. 'read_inputs -> initial_shifting transition failed
+UVVM:                                                                           (expected 1)'
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                        45.0 ns  TB seq.                        TEST A passed: read_inputs -> initial_shifting
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UVVM: ID_POS_ACK                        55.0 ns  TB seq.                        check_value() => OK, for boolean true. 'FSM should be in addition (2)'
+UVVM: ID_POS_ACK                        65.0 ns  TB seq.                        check_value() => OK, for boolean true. 'FSM should be in comp1 (3)'
+UVVM: ID_POS_ACK                        75.0 ns  TB seq.                        check_value() => OK, for boolean true. 'FSM should be in sub1 (4)'
+UVVM: ID_POS_ACK                       135.0 ns  TB seq.                        check_value() => OK, for boolean true. 'FSM should assert finished_calc in saida'
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                       135.0 ns  TB seq.                        Rest of path reached saida OK
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+simulation stopped @135ns
+==> Compiling DUT and testbench for blakley...
+ghdl -a --std=08 -frelaxed -fsynopsys -Pghdl --workdir=build/tb_blakley project/RSA_accelerator/source/blakely_datapath.vhd
+ghdl -a --std=08 -frelaxed -fsynopsys -Pghdl --workdir=build/tb_blakley project/RSA_accelerator/source/blakely_fsm.vhd
+ghdl -a --std=08 -frelaxed -fsynopsys -Pghdl --workdir=build/tb_blakley project/RSA_accelerator/source/blakley.vhd
+ghdl -a --std=08 -frelaxed -fsynopsys -Pghdl --workdir=build/tb_blakley project/tb/tb_blakley.vhd
+ghdl -e --std=08 -frelaxed -fsynopsys -Pghdl --workdir=build/tb_blakley -o build/tb_blakley/tb_blakley tb_blakley
+==> Running tests for blakley...
+/workspaces/tfe4141/UVVM/uvvm_util/src/license_pkg.vhd:56:5:@0ms:(report note): 
+
+
+*****************************************************************************************************
+ This is a *** LICENSED PRODUCT *** as given in the LICENSE.TXT in the root directory.
+*****************************************************************************************************
+
+
+/workspaces/tfe4141/UVVM/uvvm_util/src/methods_pkg.vhd:3404:7:@5ns:(report note): log file name set: build/UVVM_Log.txt
+/workspaces/tfe4141/UVVM/uvvm_util/src/methods_pkg.vhd:3373:7:@5ns:(report note): alert file name set: build/UVVM_Alert.txt
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                         5.0 ns  TB seq.                        T=5000000 fs a_msb='0' gt1='1' gt2='1' add='0' sub1='0' sub2='0' shift='0' store='0' out_en='0'
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UVVM: ID_LOG_MSG_CTRL                   10.0 ns  TB seq.                        Changing log destination to console_and_log. Was console_and_log. 
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                        10.0 ns  TB seq.                        Starting robust Blakley testbench
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                        15.0 ns  TB seq.                        T=15000000 fs a_msb='0' gt1='1' gt2='1' add='0' sub1='0' sub2='0' shift='0' store='0'
+UVVM:                                                                           out_en='0'
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                        25.0 ns  TB seq.                        T=25000000 fs a_msb='0' gt1='1' gt2='1' add='0' sub1='0' sub2='0' shift='0' store='0'
+UVVM:                                                                           out_en='0'
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                        35.0 ns  TB seq.                        T=35000000 fs a_msb='0' gt1='0' gt2='0' add='0' sub1='0' sub2='0' shift='1' store='0'
+UVVM:                                                                           out_en='0'
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                        45.0 ns  TB seq.                        T=45000000 fs a_msb='0' gt1='0' gt2='0' add='0' sub1='0' sub2='0' shift='0' store='0'
+UVVM:                                                                           out_en='0'
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                        55.0 ns  TB seq.                        T=55000000 fs a_msb='0' gt1='0' gt2='0' add='0' sub1='0' sub2='0' shift='0' store='0'
+UVVM:                                                                           out_en='0'
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                        65.0 ns  TB seq.                        T=65000000 fs a_msb='0' gt1='0' gt2='0' add='0' sub1='0' sub2='0' shift='0' store='1'
+UVVM:                                                                           out_en='0'
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                        75.0 ns  TB seq.                        T=75000000 fs a_msb='0' gt1='0' gt2='0' add='0' sub1='0' sub2='0' shift='0' store='1'
+UVVM:                                                                           out_en='0'
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                        85.0 ns  TB seq.                        T=85000000 fs a_msb='0' gt1='0' gt2='0' add='0' sub1='0' sub2='0' shift='0' store='1'
+UVVM:                                                                           out_en='0'
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                        95.0 ns  TB seq.                        T=95000000 fs a_msb='0' gt1='0' gt2='0' add='0' sub1='0' sub2='0' shift='0' store='1'
+UVVM:                                                                           out_en='0'
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                       105.0 ns  TB seq.                        T=105000000 fs a_msb='0' gt1='0' gt2='0' add='0' sub1='0' sub2='0' shift='0' store='0'
+UVVM:                                                                           out_en='1'
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                       115.0 ns  TB seq.                        DUT result: 0000000000000000000000000000000000000000000000000000000000000000
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UVVM: 
+UVVM: 
+UVVM: ID_LOG_HDR                       115.0 ns  TB seq.                        REF result: 0000000000000000000000000000000000000000000000000000000000000002
+UVVM: -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UVVM: 
+UVVM: =========================================================================================================================================================================
+UVVM: ***  ERROR #1  ***
+UVVM:           115 ns   TB seq.
+UVVM:                    check_value() => Failed. slv  Was x"0000000000000000000000000000000000000000000000000000000000000000". Expected
+UVVM:                    x"0000000000000000000000000000000000000000000000000000000000000002".
+UVVM:                    Result mismatch
+UVVM: 
+UVVM: Simulator has been paused as requested after 1 ERROR
+UVVM: *** To find the root cause of this alert, step out the HDL calling stack in your simulator. ***
+UVVM: *** For example, step out until you reach the call from the test sequencer. ***
+UVVM: =========================================================================================================================================================================
+UVVM: 
+UVVM: 
+simulation stopped @115ns with status 1
