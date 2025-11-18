@@ -27,14 +27,18 @@ TOP_BLAKLEY := tb_blakley
 BUILD_DIR_BLAKLEY := $(BUILD_DIR)/$(TOP_BLAKLEY)
 # Modular exponentiation
 DUT_EXP_SM := $(SRC_DIR)/FSM_general_module_1.vhd
-TB_EXP_SM  := $(TB_DIR)/tb_mod_exp_sm.vhd
+TB_EXP_SM  := \
+	$(TB_DIR)/helpers.vhd \
+	$(TB_DIR)/tb_mod_exp_sm.vhd
 TOP_EXP_SM := tb_mod_exp_sm
 BUILD_DIR_EXP_SM := $(BUILD_DIR)/$(TOP_EXP_SM)
 # Modular exponentiation combinatorial logic
 DUT_EXP_COMB := \
 	$(SRC_DIR)/FSM_general_module_1.vhd \
 	$(SRC_DIR)/general_module_combinatory_file.vhd
-TB_EXP_COMB  := $(TB_DIR)/tb_mod_exp_combinatorial.vhd
+TB_EXP_COMB  :=  \
+	$(TB_DIR)/helpers.vhd \
+	$(TB_DIR)/tb_mod_exp_combinatorial.vhd
 TOP_EXP_COMB := tb_mod_exp_combinatorial
 BUILD_DIR_EXP_COMB := $(BUILD_DIR)/$(TOP_EXP_COMB)
 
