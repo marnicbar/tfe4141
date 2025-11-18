@@ -19,15 +19,30 @@ use ieee.numeric_std.all;
 --In this case, this means interface towards the outside of the RSA core, 
 --and interface to the blakley module.
 entity exponentiation is
-    generic (
+    generic (--these are some constant integers we define.
         C_block_size     : integer := 256;
         counter_bit_size : integer := 8 --the counter needs 8 bits, to count to 256, for the bits of e.
     );
     port (
-        --------------------------------------------------------
-        --interface from general module to outside of RSA-core:
-        ---------------------------------------------------------
+        ---------------------------------------------
+        -- Only for use in testbenches and debugging:
+        ---------------------------------------------
+        dbg_LSR_e               : out std_logic_vector(C_block_size - 1 downto 0); --Left shift register for key_e
+        dbg_P_reg               : out std_logic_vector(C_block_size - 1 downto 0); --register for value P
+        dbg_C_reg               : out std_logic_vector(C_block_size - 1 downto 0); --register for value C
+        dbg_pc_select           : out std_logic; -- Signal to select which of P or C that are "using" the blakley module.
+        dbg_e_bit_counter       : out std_logic_vector(counter_bit_size downto 0); --8 bit signal for a counter which the state machine uses to iterate over 256 bits of key_e.
+        dbg_e_counter_increment : out std_logic; --tells e_counter to += 1.
+        dbg_e_counter_end       : out std_logic; --tells FSM that we have processed all 256 bits of e.
+        dbg_LS_enable           : out std_logic; --signal which left shifts register LSR_e
+        dbg_e_bit               : out std_logic; --the LSB of register LSR_e
+        dbg_initialize_regs     : out std_logic; --loads initial values into C, P, LSR_e and e_counter
+        dbg_is_last_msg_enable  : out std_logic; --signal which tells "is_last_msg" to record the "msgin_last" signal.
+        dbg_is_last_msg         : out std_logic; --register which = 1, if msgin_last has been high.
 
+        --------------------------------------------------------
+        -- Interface from general module to outside of RSA-core:
+        --------------------------------------------------------
         --input data
         message : in std_logic_vector(C_block_size - 1 downto 0); --aka: M
         key     : in std_logic_vector(C_block_size - 1 downto 0); --aka: key_e
@@ -46,10 +61,9 @@ entity exponentiation is
         valid_out   : out std_logic; --aka: msgout_valid
         msgout_last : out std_logic;
 
-        ----------------------------------------------------
-        --interface from general module to Blakley module:---
-        -----------------------------------------------------
-
+        ---------------------------------------------------
+        -- Interface from general module to Blakley module:
+        ---------------------------------------------------
         --controll signals
         Blak_enable   : out std_logic; --signal that tells Blakley module to start computation.
         Blak_finished : in  std_logic; --signal that Blakley module is finished.
@@ -101,44 +115,40 @@ begin
             msgout_last => msgout_last,
 
             --datapath signals:
-            LS_enable          => LS_enable,
-            e_counter_end      => e_counter_end,
+            LS_enable           => LS_enable,
+            e_counter_end       => e_counter_end,
             e_counter_increment => e_counter_increment,
-            initialize_regs    => initialize_regs,
-            Blak_reset_n       => Blak_reset_n,
-            Blak_enable        => Blak_enable,
-            Blak_finished      => Blak_finished,
-            pc_select          => pc_select,
-            is_last_msg_enable => is_last_msg_enable,
-            is_last_msg        => is_last_msg,
-            e_bit              => e_bit
-
+            initialize_regs     => initialize_regs,
+            Blak_reset_n        => Blak_reset_n,
+            Blak_enable         => Blak_enable,
+            Blak_finished       => Blak_finished,
+            pc_select           => pc_select,
+            is_last_msg_enable  => is_last_msg_enable,
+            is_last_msg         => is_last_msg,
+            e_bit               => e_bit
         );
 
     -- ***************************************************************************
     -- Get output from Blakley-module, and put the result in reg P or reg C:
     -- ***************************************************************************
-    process (clk, reset_n) begin
-        if (reset_n = '0') then --reset/initialize register P and C
-            P_reg    <= message; --Message M gets put in register P.
+    process (reset_n, initialize_regs, Blak_finished, pc_select, clk) begin
+        if (reset_n = '0' or initialize_regs = '1') then -- reset/initialize register P and C
+            P_reg    <= message; -- Message M gets put in register P.
             C_reg    <= (others => '0');
             C_reg(0) <= '1'; -- value [000...001] gets put into register C.
-        elsif (clk'event and clk = '1') then
-            if (pc_select = '0' and Blak_finished = '1') then
-                P_reg <= Blak_C;
-            elsif (pc_select = '1' and Blak_finished = '1') then
-                C_reg <= Blak_C;
-            end if;
-            if (initialize_regs = '1') then
-                P_reg    <= message; --Message M gets put in register P.
-                C_reg    <= (others => '0');
-                C_reg(0) <= '1'; -- value [000...001] gets put into register C.
+        else
+            if (rising_edge(clk) and Blak_finished = '1') then
+                if (pc_select = '0') then
+                    P_reg <= Blak_C;
+                elsif (pc_select = '1') then
+                    C_reg <= Blak_C;
+                end if;
             end if;
         end if;
     end process;
 
     process (C_reg) begin
-        result <= C_reg; --msg_out.
+        result <= C_reg; --result = msg_out.
     end process;
 
     -- ***************************************************************************
@@ -155,20 +165,8 @@ begin
     end process;
 
     -- ***************************************************************************
-    -- Tell blakley module to reset, if general module resets, or we initialize the system:
+    -- clk for blakley module:
     -- ***************************************************************************
-    process (clk, reset_n) begin
-        if (reset_n = '0') then --reset/initialize register P and C
-            Blak_reset_n <= '0'; --tell Blakley module to reset.
-        elsif (clk'event and clk = '1') then
-            if (initialize_regs = '1') then
-                Blak_reset_n <= '0';
-            else
-                Blak_reset_n <= '1';
-            end if;
-        end if;
-    end process;
-
     process (clk) begin
         Blak_clk <= clk;
     end process;
@@ -176,15 +174,11 @@ begin
     -- ***************************************************************************
     -- LSR_e and sending the e_bit to the FSM.
     -- ***************************************************************************
-    process (clk, reset_n) begin
-        if (reset_n = '0') then
+    process (reset_n, initialize_regs, LS_enable) begin
+        if (reset_n = '0' or initialize_regs = '1') then
             LSR_e <= key; -------------WARNING: this assumes key`s LSB is also in index 0 on the righthand side of the register.      
-        elsif (clk'event and clk = '1') then
-            if (initialize_regs = '1') then
-                LSR_e <= key; -----------WARNING: this assumes key`s LSB is also in index 0 on the righthand side of the register.
-            elsif (LS_enable = '1') then
-                LSR_e <= std_logic_vector(shift_right(unsigned(LSR_e), 1)); -- shift right by 1 bits, since LSB is on the righthand side.
-            end if;
+        elsif (LS_enable = '1') then
+            LSR_e <= std_logic_vector(shift_right(unsigned(LSR_e), 1)); -- shift right by 1 bits, since LSB is on the righthand side.
         end if;
     end process;
 
@@ -195,41 +189,44 @@ begin
     -- ***************************************************************************
     -- e_bit_counter, tells the FSM when we have processed all 256 bits of e.
     -- ***************************************************************************
-  process (clk, reset_n)
-begin
-    if (reset_n = '0') then
-        e_bit_counter <= (others => '0');
-        e_counter_end <= '0';
-    elsif rising_edge(clk) then
-        if (initialize_regs = '1') then
-            e_bit_counter <= (others => '0');
+    process (reset_n, initialize_regs, e_counter_increment) begin
+        if (reset_n = '0' or initialize_regs = '1') then
+            e_bit_counter <= (others => '0'); --fills vector with zero`s.
             e_counter_end <= '0';
         elsif (e_counter_increment = '1') then
             e_bit_counter <= std_logic_vector(unsigned(e_bit_counter) + 1);
-            
-            -- Check after increment if we've reached 255
-            if unsigned(e_bit_counter) = 255 then
-                e_counter_end <= '1';
-            else
-                e_counter_end <= '0';
-            end if;
-        else
-            e_counter_end <= '0';  -- default
         end if;
-    end if;
-end process;
+        if (unsigned(e_bit_counter) >= 255) then --this condition means we have processed all bits of e.
+            e_counter_end <= '1';
+        else
+            e_counter_end <= '0';
+        end if;
+    end process;
 
     -- ***************************************************************************
     -- is_last_msg. Being told to record the msgin_last-signal.
     -- ***************************************************************************
-    process (clk, reset_n) begin
+    process (reset_n, is_last_msg_enable) begin
         if (reset_n = '0') then
             is_last_msg <= '0';
-        elsif (clk'event and clk = '1') then
-            if (is_last_msg_enable = '1') then
-                is_last_msg <= msgin_last;
-            end if;
+        elsif (is_last_msg_enable = '1') then
+            is_last_msg <= msgin_last;
         end if;
     end process;
 
+    -- Only for use in testbenches and debugging:
+    -- pragma translate_off
+    dbg_LSR_e               <= LSR_e;
+    dbg_P_reg               <= P_reg;
+    dbg_C_reg               <= C_reg;
+    dbg_pc_select           <= pc_select;
+    dbg_e_bit_counter       <= e_bit_counter;
+    dbg_e_counter_increment <= e_counter_increment;
+    dbg_e_counter_end       <= e_counter_end;
+    dbg_LS_enable           <= LS_enable;
+    dbg_e_bit               <= e_bit;
+    dbg_initialize_regs     <= initialize_regs;
+    dbg_is_last_msg_enable  <= is_last_msg_enable;
+    dbg_is_last_msg         <= is_last_msg;
+    -- pragma translate_on
 end expBehave;
