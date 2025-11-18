@@ -10,17 +10,18 @@ package helpers_pkg is
     );
 end package helpers_pkg;
 
--- Helper procedure: generate a single pulse of 1 ns low then 1 ns high
--- Usage: call pulse_1ns(clk) to simulate one clock cycle of 2 ns period
+-- Helper procedure: generate a single pulse of 0.5 ns low then 0.5 ns high
+-- Usage: call pulse_1ns(clk) to simulate one clock cycle of 1 ns period
 package body helpers_pkg is
     procedure pulse_1ns(signal sig : out std_logic) is
     begin
-        wait for 1 ns;
+        wait for 0.5 ns;
         sig <= '1';
-        wait for 1 ns;
+        wait for 0.5 ns;
         sig <= '0';
     end procedure pulse_1ns;
 
+    -- Helper procedure: wait clock cycles until a condition is met
     procedure wait_clocks_until(
         signal clk  : out std_logic;
         signal cond : in  std_logic

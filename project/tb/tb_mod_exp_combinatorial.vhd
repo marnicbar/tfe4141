@@ -139,6 +139,7 @@ begin
         -- Load test values
         reset_n  <= '1';
         valid_in <= '1';
+        msgin_last <= '1'; -- Indicate that this is the last message
         message  <= std_logic_vector(to_unsigned(7, message'length));
         key      <= std_logic_vector(to_unsigned(3, key'length)); -- Exponent 
         modulus  <= std_logic_vector(to_unsigned(55, modulus'length));
@@ -173,7 +174,7 @@ begin
         check_value(P_reg, std_logic_vector(to_unsigned(7, P_reg'length)), ERROR, "P_reg must hold previous value when calculating P.");
         check_value(C_reg, std_logic_vector(to_unsigned(7, C_reg'length)), ERROR, "C_reg must be previous C_reg when calculating P.");
         check_value(Blak_A, std_logic_vector(to_unsigned(7, Blak_A'length)), ERROR, "Blak_A must be P_reg value when calculating P.");
-        check_value(Blak_B, std_logic_vector(to_unsigned(7, Blak_B'length)), ERROR, "Blak_B must be C_reg value when calculating P.");
+        check_value(Blak_B, std_logic_vector(to_unsigned(7, Blak_B'length)), ERROR, "Blak_B must be P_reg value when calculating P.");
 
         -- Simulate Blakley module finishing calculation
         Blak_C        <= std_logic_vector(to_unsigned(49, Blak_C'length)); -- 7 * 7 mod 55 = 49
@@ -207,30 +208,67 @@ begin
         check_value(P_reg, std_logic_vector(to_unsigned(49, P_reg'length)), ERROR, "P_reg must hold previous value when calculating C.");
         check_value(C_reg, std_logic_vector(to_unsigned(13, C_reg'length)), ERROR, "C_reg must hold correct value after calculating C.");
 
-        -- -- Calc P
-        -- Blak_finished <= '0';
-        -- pulse_1ns(clk);
-        -- check_value(P_reg, std_logic_vector(to_unsigned(7, P_reg'length)), ERROR, "P_reg must hold previous value when calculating P.");
-        -- check_value(C_reg, std_logic_vector(to_unsigned(7, C_reg'length)), ERROR, "C_reg must be previous C_reg when calculating P.");
-        -- check_value(Blak_A, std_logic_vector(to_unsigned(7, Blak_A'length)), ERROR, "Blak_A must be P_reg value when calculating P.");
-        -- check_value(Blak_B, std_logic_vector(to_unsigned(7, Blak_B'length)), ERROR, "Blak_B must be C_reg value when calculating P.");
+        -- Calc P
+        Blak_finished <= '0';
+        pulse_1ns(clk);
+        check_value(Blak_A, std_logic_vector(to_unsigned(49, Blak_A'length)), ERROR, "Blak_A must be P_reg value when calculating P.");
+        check_value(Blak_B, std_logic_vector(to_unsigned(49, Blak_B'length)), ERROR, "Blak_B must be P_reg value when calculating P.");
 
-        -- -- Simulate Blakley module finishing calculation
-        -- Blak_C        <= std_logic_vector(to_unsigned(49, Blak_C'length)); -- 7 * 7 mod 55 = 49
-        -- Blak_finished <= '1';
-        -- pulse_1ns(clk);
-        -- check_value(C_reg, std_logic_vector(to_unsigned(7, C_reg'length)), ERROR, "C_reg must hold previous value after calculating P.");
-        -- check_value(P_reg, std_logic_vector(to_unsigned(49, C_reg'length)), ERROR, "P_reg must hold correct value after calculating C.");
-        -- check_value(e_bit_counter, std_logic_vector(to_unsigned(1, e_bit_counter'length)), ERROR, "e_bit_counter must be incremented after processing one bit.");
+        -- Simulate Blakley module finishing calculation
+        Blak_C        <= std_logic_vector(to_unsigned(36, Blak_C'length)); -- 49 * 49 mod 55 = 36
+        Blak_finished <= '1';
+        pulse_1ns(clk);
+        check_value(P_reg, std_logic_vector(to_unsigned(36, C_reg'length)), ERROR, "P_reg must hold result of multiplication.");
+        check_value(C_reg, std_logic_vector(to_unsigned(13, C_reg'length)), ERROR, "C_reg must hold previous value.");
+        check_value(e_bit_counter, std_logic_vector(to_unsigned(2, e_bit_counter'length)), ERROR, "e_bit_counter must be incremented after processing one bit.");
 
-        -- -- Increment e counter
-        -- Blak_finished <= '0';
-        -- pulse_1ns(clk);
-        -- check_value(e_counter_end, '0', ERROR, "e_counter_end must be '0' after processing one bit.");
+        -- Increment e counter
+        Blak_finished <= '0';
+        pulse_1ns(clk);
+        check_value(e_counter_end, '0', ERROR, "e_counter_end must be '0' after processing second bit.");
 
-        -- -- Leftshift e
-        -- pulse_1ns(clk);
-        -- check_value(e_bit, '1', ERROR, "e_bit must be updated to new LSB of LSR_e after shift.");
+        -- Leftshift e
+        pulse_1ns(clk);
+        check_value(e_bit, '0', ERROR, "e_bit must be updated to new LSB of LSR_e after shift.");
+
+        -- Calc P (since e_bit = 0, we skip calc C)
+        pulse_1ns(clk);
+        pulse_1ns(clk); -- Two clocks to get to state calc_P
+        check_value(Blak_A, std_logic_vector(to_unsigned(36, Blak_A'length)), ERROR, "Blak_A must be P_reg value when calculating P.");
+        check_value(Blak_B, std_logic_vector(to_unsigned(36, Blak_B'length)), ERROR, "Blak_B must be P_reg value when calculating P.");
+
+        -- Simulate Blakley module finishing calculation
+        Blak_C        <= std_logic_vector(to_unsigned(31, Blak_C'length)); -- 36 * 36 mod 55 = 31
+        Blak_finished <= '1';
+        pulse_1ns(clk);
+        check_value(P_reg, std_logic_vector(to_unsigned(31, C_reg'length)), ERROR, "P_reg must hold result of multiplication.");
+        check_value(C_reg, std_logic_vector(to_unsigned(13, C_reg'length)), ERROR, "C_reg must hold previous value.");
+        check_value(e_bit_counter, std_logic_vector(to_unsigned(3, e_bit_counter'length)), ERROR, "e_bit_counter must be incremented after processing one bit.");
+
+        -- Increment e counter
+        Blak_finished <= '0';
+        pulse_1ns(clk);
+        check_value(e_counter_end, '0', ERROR, "e_counter_end must be '0' after processing third bit.");
+
+        -------------------------------------------------
+        -- Now three bits of exponent have been processed.
+        -- The current state should be is_e_processed
+        -------------------------------------------------
+
+        -- Process remaining bits quickly until e_counter_end = '1'
+        Blak_finished <= '1';
+        wait_clocks_until(clk, e_counter_end);
+        check_value(e_counter_end, '1', ERROR, "e_counter_end must be '1' after processing all bits.");
+
+        -- Set valid out
+        ready_out <= '1';
+        pulse_1ns(clk);
+        check_value(valid_out, '1', ERROR, "valid_out must be '1' when computation is done.");
+        check_value(result, std_logic_vector(to_unsigned(13, result'length)), ERROR, "Result must hold final computed value.");
+
+        -- Check is_last_msg
+        pulse_1ns(clk);
+        check_value(is_last_msg, '1', ERROR, "is_last_msg must be '1' since msgin_last was '1' at start.");
 
         -- Final reporting
         -- report_msg_id_panel(VOID); -- Prints enabled/disabled log IDs (optional)
