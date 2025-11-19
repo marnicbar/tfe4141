@@ -64,7 +64,7 @@ architecture sim of tb_mod_exp_combinatorial is
     signal P_reg               : std_logic_vector(C_block_size - 1 downto 0); --register for value P
     signal C_reg               : std_logic_vector(C_block_size - 1 downto 0); --register for value C
     signal pc_select           : std_logic; -- Signal to select which of P or C that are "using" the blakley module.
-    signal e_bit_counter       : std_logic_vector(counter_bit_size downto 0); --8 bit signal for a counter which the state machine uses to iterate over 256 bits of key_e.
+    signal e_bit_counter       : std_logic_vector(counter_bit_size - 1 downto 0); --8 bit signal for a counter which the state machine uses to iterate over 256 bits of key_e.
     signal e_counter_increment : std_logic; --tells e_counter to += 1.
     signal e_counter_end       : std_logic; --tells FSM that we have processed all 256 bits of e.
     signal LS_enable           : std_logic; --signal which left shifts register LSR_e
@@ -147,6 +147,9 @@ begin
         -- First clock to set initialize_regs
         pulse_1ns(clk);
         check_value(initialize_regs, '1', ERROR, "initialize_regs must be '1' after valid_in pulse.");
+
+        --check values in registers, after they have been initialized:
+        pulse_1ns(clk);
         check_value(LSR_e, key, ERROR, "LSR_e shall be loaded with key after valid_in pulse.");
         check_value(P_reg, message, ERROR, "P_reg shall be loaded with message after valid_in pulse.");
         check_value(C_reg, std_logic_vector(to_unsigned(1, C_reg'length)), ERROR, "C_reg shall be initialized to 1 after valid_in pulse.");
