@@ -1,4 +1,4 @@
--- tb_blakely_fsm.vhd
+-- tb_blakley_fsm.vhd
 -- Compact UVVM testbench that explicitly verifies read_inputs -> initial_shifting
 library ieee;
 use ieee.std_logic_1164.all;
@@ -7,10 +7,10 @@ use ieee.numeric_std.all;
 library uvvm_util;
 context uvvm_util.uvvm_util_context;
 
-entity tb_blakely_fsm is
+entity tb_blakley_fsm is
 end entity;
 
-architecture sim of tb_blakely_fsm is
+architecture sim of tb_blakley_fsm is
     signal clk       : std_logic := '0';
     signal reset_n   : std_logic := '0';
     signal bn_enable : std_logic := '0';
@@ -35,7 +35,7 @@ begin
     ----------------------------------------------------------------
     -- Instantiate FSM with small COUNT_LIMIT so we reach 'saida' quickly in test
     ----------------------------------------------------------------
-    u_fsm : entity work.blakely_fsm
+    u_fsm : entity work.blakley_fsm
         port map (
             clk => clk,
             reset_n => reset_n,

@@ -2,7 +2,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 
-entity blakely_fsm is
+entity blakley_fsm is
     port (
         clk, reset_n : in std_logic;
         bn_enable    : in std_logic;
@@ -15,9 +15,9 @@ entity blakely_fsm is
         finished_calc : out std_logic;
         dbg_state     : out std_logic_vector(3 downto 0)
     );
-end blakely_fsm;
+end blakley_fsm;
 
-architecture behavioral of blakely_fsm is
+architecture behavioral of blakley_fsm is
 
     type state_type is (
         read_inputs,

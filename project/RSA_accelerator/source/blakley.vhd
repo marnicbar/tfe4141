@@ -12,7 +12,7 @@ use IEEE.NUMERIC_STD.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity blakely is
+entity blakley is
     generic(
             bit_width      : positive := 256 --we are working with 256 bits per word
     );
@@ -32,9 +32,9 @@ entity blakely is
            --outputs
            Output : out std_logic_vector(bit_width-1 downto 0);
            finished_calc : out STD_LOGIC
-end blakely;
+end blakley;
 
-architecture Behavioral of blakely is
+architecture Behavioral of blakley is
 
     ------------------------------------------------------------------------
     -- Internal registers 

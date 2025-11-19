@@ -21,14 +21,14 @@ GHDL_FLAGS := --std=08 -frelaxed -fsynopsys -P$(UVVM_LIBS)
 
 # Designs and testbenches
 # Blakley
-FSM_BLAKLEY := $(SRC_DIR)/blakely_fsm.vhd
-COMBINATORIAL_BLAKLEY := $(SRC_DIR)/blakely_datapath.vhd
+FSM_BLAKLEY := $(SRC_DIR)/blakley_fsm.vhd
+COMBINATORIAL_BLAKLEY := $(SRC_DIR)/blakley_datapath.vhd
 DUT_BLAKLEY := $(SRC_DIR)/blakley.vhd
 TB_BLAKLEY  := $(TB_DIR)/tb_blakley.vhd
 TOP_BLAKLEY := tb_blakley
 BUILD_DIR_BLAKLEY := $(BUILD_DIR)/$(TOP_BLAKLEY)
 TB_FSM_BLAKLEY := $(TB_DIR)/tb_blakley_fsm.vhd
-TOP_FSM_BLAKLEY := tb_blakely_fsm
+TOP_FSM_BLAKLEY := tb_blakley_fsm
 BUILD_DIR_FSM_BLAKLEY := $(BUILD_DIR)/$(TOP_FSM_BLAKLEY)
 TB_DATAPATH_BLAKLEY := $(TB_DIR)/tb_blakley_datapath.vhd
 TOP_DATAPATH_BLAKLEY := tb_blakley_datapath

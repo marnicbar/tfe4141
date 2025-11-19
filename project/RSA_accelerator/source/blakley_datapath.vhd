@@ -2,7 +2,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 
-entity blakely_datapath is
+entity blakley_datapath is
     generic (
         bit_width : positive := 256
     );
@@ -32,9 +32,9 @@ entity blakely_datapath is
         -- Output
         Output : out std_logic_vector(bit_width-1 downto 0)
     );
-end blakely_datapath;
+end blakley_datapath;
 
-architecture behavioral of blakely_datapath is
+architecture behavioral of blakley_datapath is
     signal reg_a, reg_b, reg_n, reg_temp, reg_out : unsigned(bit_width - 1 downto 0);
     signal temp_sub : unsigned(bit_width downto 0);
 begin

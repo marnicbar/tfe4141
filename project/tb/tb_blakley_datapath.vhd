@@ -1,5 +1,5 @@
 -- tb_blakley_datapath.vhd
--- UVVM testbench for blakely_datapath using check_value() style from tb_blakley_fsm
+-- UVVM testbench for blakley_datapath using check_value() style from tb_blakley_fsm
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -48,7 +48,7 @@ begin
     ----------------------------------------------------------------
     -- Instantiate DUT
     ----------------------------------------------------------------
-    uut: entity work.blakely_datapath
+    uut: entity work.blakley_datapath
         generic map (
             bit_width => bit_width
         )
@@ -106,7 +106,7 @@ begin
     end process;
 
     ----------------------------------------------------------------
-    -- Test sequence (mirrors style of tb_blakely_fsm check_value usage)
+    -- Test sequence (mirrors style of tb_blakley_fsm check_value usage)
     ----------------------------------------------------------------
     tb_process : process
         constant zero  : std_logic_vector(bit_width-1 downto 0) := (others => '0');

@@ -27,7 +27,7 @@ architecture sim of tb_blakley is
     signal finished_calc : std_logic;
     signal dbg_state_sig : std_logic_vector(3 downto 0);
 
-    -- DEBUG SIGNALS matching blakely.vhd
+    -- DEBUG SIGNALS matching blakley.vhd
     signal load_i_sig      : std_logic;
     signal shift_a_sig     : std_logic;
     signal add_en_sig      : std_logic;
@@ -65,7 +65,7 @@ begin
     --------------------------------------------------------------------
     -- Instantiate DUT
     --------------------------------------------------------------------
-    dut : entity work.blakely
+    dut : entity work.blakley
         generic map(
             bit_width   => bit_width,
             COUNT_LIMIT => bit_width - 1   -- full computation
