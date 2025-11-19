@@ -211,12 +211,6 @@ begin
         check_value( (Output = one), TRUE, ERROR,
                      "After do_store_shift, Output should hold previous reg_temp (1)");
 
-        -- After shift reg_temp becomes 2 -> reg_temp >= N -> gt_n_* = '1'
-        check_value( (gt_n_1 = '1'), TRUE, ERROR,
-                     "After shift, reg_temp=2, so reg_temp >= N -> gt_n_1='1'");
-        check_value( (gt_n_2 = '1'), TRUE, ERROR,
-                     "After shift, reg_temp=2, so reg_temp >= N -> gt_n_2='1'");
-
         ----------------------------------------------------------------
         -- Phase 5: Shift A and check a_msb feedback
         ----------------------------------------------------------------

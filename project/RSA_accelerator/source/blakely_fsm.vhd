@@ -125,4 +125,18 @@ begin
 
  
 
+  dbg_state <=
+    "0000" when state = read_inputs       else
+    "0001" when state = initial_shifting  else
+    "0010" when state = addition          else
+    "0011" when state = comp1             else
+    "0100" when state = sub1              else
+    "0101" when state = comp2             else
+    "0110" when state = sub2              else
+    "0111" when state = store_shift       else
+    "1000"; -- saida
+
+
+
+
 end behavioral;

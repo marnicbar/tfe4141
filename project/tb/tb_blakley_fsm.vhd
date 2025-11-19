@@ -36,9 +36,6 @@ begin
     -- Instantiate FSM with small COUNT_LIMIT so we reach 'saida' quickly in test
     ----------------------------------------------------------------
     u_fsm : entity work.blakely_fsm
-        generic map (
-            COUNT_LIMIT => 3
-        )
         port map (
             clk => clk,
             reset_n => reset_n,
@@ -75,18 +72,19 @@ begin
     ----------------------------------------------------------------
     monitor : process
     begin
-        wait until rising_edge(clk);
-        log(ID_LOG_HDR,
-            "T=" & time'image(now)
-            & " state=" & integer'image(to_integer(unsigned(dbg_state)))
-            & " bn_en=" & std_logic'image(bn_enable)
-            & " a_msb=" & std_logic'image(a_msb)
-            & " gt1=" & std_logic'image(gt_n_1)
-            & " gt2=" & std_logic'image(gt_n_2)
-            & " do_store=" & std_logic'image(do_store_shift)
-            & " finished=" & std_logic'image(finished_calc)
-        );
-        wait;
+        loop
+            wait until rising_edge(clk);
+            log(ID_LOG_HDR,
+                "T=" & time'image(now)
+                & " state=" & integer'image(to_integer(unsigned(dbg_state)))
+                & " bn_en=" & std_logic'image(bn_enable)
+                & " a_msb=" & std_logic'image(a_msb)
+                & " gt1=" & std_logic'image(gt_n_1)
+                & " gt2=" & std_logic'image(gt_n_2)
+                & " do_store=" & std_logic'image(do_store_shift)
+                & " finished=" & std_logic'image(finished_calc)
+            );
+        end loop;
     end process;
 
     ----------------------------------------------------------------
@@ -133,16 +131,16 @@ begin
         -- We use the same safe rule: drive inputs early before edges that need them.
         ----------------------------------------------------------------
         -- next edge should go to addition
+        a_msb <= '1';
         wait until rising_edge(clk);
         check_value( (to_integer(unsigned(dbg_state)) = 2), TRUE, ERROR,
                      "FSM should be in addition (2)");
 
-        -- prepare for comp1 decision: set a_msb so add_en is taken
-        a_msb <= '1';
+       
         gt_n_1 <= '1';
-        wait for 1 ns;
+        --wait for 1 ns;
         wait until rising_edge(clk); -- addition -> comp1
-        check_value( (to_integer(unsigned(dbg_state)) = 3), TRUE, ERROR,
+        check_value( to_integer(unsigned(dbg_state)) , 3, ERROR,
                      "FSM should be in comp1 (3)");
 
         -- force gt_n_1 = '1' *while in comp1 decision window* by setting it
