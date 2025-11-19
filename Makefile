@@ -50,13 +50,27 @@ TB_EXP_COMB  :=  \
 	$(TB_DIR)/tb_mod_exp_combinatorial.vhd
 TOP_EXP_COMB := tb_mod_exp_combinatorial
 BUILD_DIR_EXP_COMB := $(BUILD_DIR)/$(TOP_EXP_COMB)
+# Combined modules
+DUT_COMBINED := \
+	$(SRC_DIR)/FSM_general_module_1.vhd \
+	$(SRC_DIR)/general_module_combinatory_file.vhd \
+	$(SRC_DIR)/blakley_datapath.vhd \
+	$(SRC_DIR)/blakley_fsm.vhd\
+	$(SRC_DIR)/blakley.vhd
+TB_COMBINED  :=  \
+	$(TB_DIR)/helpers.vhd \
+	$(TB_DIR)/tb_combined.vhd
+TOP_COMBINED := tb_combined
+BUILD_DIR_COMBINED := $(BUILD_DIR)/$(TOP_EXP_COMB)
 
 # ============================================================
 # Targets
 # ============================================================
 
 .PHONY: all compile-blakley compile-datapath-blakley compile-fsm-blakley compile-exp-sm compile-exp-comb compile \
-			test-blakley test-datapath-blakley test-fsm-blakley test-exp-sm test-exp-comb test clean
+			test-blakley test-datapath-blakley test-fsm-blakley test-exp-sm test-exp-comb \
+			compile-combined test-combined \
+			test clean
 
 all: test
 
@@ -74,6 +88,9 @@ $(BUILD_DIR_EXP_SM):
 
 $(BUILD_DIR_EXP_COMB):
 	mkdir -p $(BUILD_DIR_EXP_COMB)
+
+$(BUILD_DIR_COMBINED):
+	mkdir -p $(BUILD_DIR_COMBINED)
 
 compile_libs: $(UVVM_COMPILE_STAMP)
 
@@ -95,7 +112,6 @@ compile-fsm-blakley: compile_libs | $(BUILD_DIR_FSM_BLAKLEY)
 	$(GHDL) -a $(GHDL_FLAGS) --workdir=$(BUILD_DIR_FSM_BLAKLEY) $(TB_FSM_BLAKLEY)
 	$(GHDL) -e $(GHDL_FLAGS) --workdir=$(BUILD_DIR_FSM_BLAKLEY) -o $(BUILD_DIR_FSM_BLAKLEY)/$(TOP_FSM_BLAKLEY) $(TOP_FSM_BLAKLEY)
 
-
 compile-blakley: compile_libs | $(BUILD_DIR_BLAKLEY)
 	@echo "==> Compiling DUT and testbench for blakley..."
 	$(GHDL) -a $(GHDL_FLAGS) --workdir=$(BUILD_DIR_BLAKLEY) $(COMBINATORIAL_BLAKLEY)
@@ -116,7 +132,13 @@ compile-exp-comb: compile_libs | $(BUILD_DIR_EXP_COMB)
 	$(GHDL) -a $(GHDL_FLAGS) --workdir=$(BUILD_DIR_EXP_COMB) $(TB_EXP_COMB)
 	$(GHDL) -e $(GHDL_FLAGS) --workdir=$(BUILD_DIR_EXP_COMB) -o $(BUILD_DIR_EXP_COMB)/$(TOP_EXP_COMB) $(TOP_EXP_COMB)
 
-compile: compile-datapath-blakley compile-fsm-blakley compile-blakley compile-exp compile-exp-comb
+compile-combined: compile_libs | $(BUILD_DIR_COMBINED)
+	@echo "==> Compiling DUT and testbench for the combined (modular exponentiation with blakley) logic..."
+	$(GHDL) -a $(GHDL_FLAGS) --workdir=$(BUILD_DIR_COMBINED) $(DUT_COMBINED)
+	$(GHDL) -a $(GHDL_FLAGS) --workdir=$(BUILD_DIR_COMBINED) $(TB_COMBINED)
+	$(GHDL) -e $(GHDL_FLAGS) --workdir=$(BUILD_DIR_COMBINED) -o $(BUILD_DIR_COMBINED)/$(TOP_COMBINED) $(TOP_COMBINED)
+
+compile: compile-datapath-blakley compile-fsm-blakley compile-blakley compile-exp compile-exp-comb compile-combined
 
 
 test-datapath-blakley: compile-datapath-blakley
@@ -159,7 +181,15 @@ test-exp-comb: compile-exp-comb
 		exec $(BUILD_DIR_EXP_COMB)/$(TOP_EXP_COMB) --assert-level=error; \
 	fi'
 
-test: test-datapath-blakley test-fsm-blakley test-blakley test-exp-sm	test-exp-comb
+test-combined: compile-combined
+	@echo "==> Running tests for the combined (modular exponentiation with blakley) logic..."
+	@sh -c 'if $(GHDL) --version | grep -q "LLVM JIT"; then \
+		exec $(GHDL) -r $(GHDL_FLAGS) --workdir=$(BUILD_DIR_COMBINED) $(TOP_COMBINED) --assert-level=error; \
+	else \
+		exec $(BUILD_DIR_COMBINED)/$(TOP_COMBINED) --assert-level=error; \
+	fi'
+
+test: test-datapath-blakley test-fsm-blakley test-blakley test-exp-sm test-exp-comb test-combined
 
 clean:
 	@echo "==> Cleaning build artifacts..."
