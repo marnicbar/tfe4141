@@ -131,7 +131,7 @@ begin
     -- ***************************************************************************
     -- Get output from Blakley-module, and put the result in reg P or reg C:
     -- ***************************************************************************
-    process (reset_n, initialize_regs, Blak_finished, pc_select, clk) begin
+    process (reset_n, initialize_regs, Blak_finished, Blak_C, message, pc_select, clk) begin
         if (reset_n = '0' or initialize_regs = '1') then -- reset/initialize register P and C
             P_reg    <= message; -- Message M gets put in register P.
             C_reg    <= (others => '0');
@@ -147,9 +147,9 @@ begin
         end if;
     end process;
 
-    process (C_reg) begin
-        result <= C_reg; --result = msg_out.
-    end process;
+
+    result <= C_reg; --result = msg_out.
+
 
     -- ***************************************************************************
     -- Send inputs to Blakley module
@@ -167,14 +167,12 @@ begin
     -- ***************************************************************************
     -- clk for blakley module:
     -- ***************************************************************************
-    process (clk) begin
         Blak_clk <= clk;
-    end process;
 
     -- ***************************************************************************
     -- LSR_e and sending the e_bit to the FSM.
     -- ***************************************************************************
-    process (reset_n, initialize_regs, LS_enable) begin
+    process (reset_n, initialize_regs, key, LS_enable) begin
         if (reset_n = '0' or initialize_regs = '1') then
             LSR_e <= key; -------------WARNING: this assumes key`s LSB is also in index 0 on the righthand side of the register.      
         elsif (LS_enable = '1') then
@@ -182,9 +180,9 @@ begin
         end if;
     end process;
 
-    process (LSR_e) begin
-        e_bit <= LSR_e(0); --sends the LSB of LSR_e, to the FSM. LSB is on the righthand side of LSR_e.
-    end process;
+    
+    e_bit <= LSR_e(0); --sends the LSB of LSR_e, to the FSM. LSB is on the righthand side of LSR_e.
+
 
     -- ***************************************************************************
     -- e_bit_counter, tells the FSM when we have processed all 256 bits of e.
@@ -206,7 +204,7 @@ begin
     -- ***************************************************************************
     -- is_last_msg. Being told to record the msgin_last-signal.
     -- ***************************************************************************
-    process (reset_n, is_last_msg_enable) begin
+    process (reset_n, is_last_msg_enable, msgin_last) begin
         if (reset_n = '0') then
             is_last_msg <= '0';
         elsif (is_last_msg_enable = '1') then
