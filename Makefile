@@ -55,8 +55,8 @@ BUILD_DIR_EXP_COMB := $(BUILD_DIR)/$(TOP_EXP_COMB)
 # Targets
 # ============================================================
 
-.PHONY: all compile-blakley compile-exp-sm compile-exp-comb compile \
-			test-blakley test-exp-sm test-exp-comb test clean
+.PHONY: all compile-blakley compile-datapath-blakley compile-fsm-blakley compile-exp-sm compile-exp-comb compile \
+			test-blakley test-datapath-blakley test-fsm-blakley test-exp-sm test-exp-comb test clean
 
 all: test
 
