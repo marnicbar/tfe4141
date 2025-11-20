@@ -13,7 +13,7 @@ package mod_exp_pkg is
         --states associated with P = P*P mod n,  and C = C*P mod n.
         calc_C, reset_blak_module, calc_P, increment_e, is_e_processed, Leftshift_e,
         --states associated with handshake data out
-        is_out_ready, set_msgout_last
+        is_out_ready
     );
 end package mod_exp_pkg;
 
@@ -86,7 +86,7 @@ begin
         state_next          <= is_in_valid; --We start at this state.
         --main implementation of statemachine
         case (state) is
-                --State 1/11:
+                --State 1/10:
             when is_in_valid => --"when in state "1_in_valid":
                 valid_out   <= '0'; --If we got her from handshake out, then stop sending data out.
                 msgout_last <= '0';
@@ -96,7 +96,7 @@ begin
                     state_next <= is_in_valid;
                 end if;
 
-                --State 2/11:
+                --State 2/10:
             when initialize =>
                 ready_in           <= '1'; --msgin_ready = 1
                 is_last_msg_enable <= '1'; --tell the register to hold the value "msgin_last".
@@ -104,7 +104,7 @@ begin
                 Blak_reset_n       <= '0';  --reset blak module before use.
                 state_next         <= read_e_bit;
 
-                --State 3/11:
+                --State 3/10:
             when read_e_bit =>
                 is_last_msg_enable <= '0';
                 ready_in           <= '0'; -- msgin_ready = 0, so that a new message is not sent to the RSA CORE.
@@ -117,7 +117,7 @@ begin
                     state_next <= calc_P; --we calculate P.
                 end if;
 
-                --State 4/11:
+                --State 4/10:
             when calc_C =>
                 Blak_enable <= '1';
                 pc_select   <= '1'; --C gets connected to the Blakley module.                 
@@ -127,13 +127,13 @@ begin
                     state_next <= calc_C;
                 end if;
 
-                --State 5/11:
+                --State 5/10:
             when reset_blak_module =>
                 Blak_enable  <= '0';
                 Blak_reset_n <= '0'; --we reset blakley-module, to prepare it for next computation.  
                 state_next   <= calc_P;
 
-                --State 6/11:
+                --State 6/10:
             when calc_P =>
                 pc_select    <= '0'; --P gets connected to the Blakley module.
                 Blak_enable  <= '1';
@@ -144,14 +144,14 @@ begin
                     state_next <= calc_P;
                 end if;
 
-                --State 7/11:
+                --State 7/10:
             when increment_e =>
                 e_counter_increment <= '1';
                 Blak_enable         <= '0';
                 Blak_reset_n        <= '0'; -- reset blakley after updating P.
                 state_next          <= is_e_processed;
 
-                --State 8/11:
+                --State 8/10:
             when is_e_processed =>
                 e_counter_increment <= '0';
                 Blak_reset_n        <= '1';
@@ -161,29 +161,28 @@ begin
                     state_next <= Leftshift_e;
                 end if;
 
-                --State 9/11:
+                --State 9/10:
             when Leftshift_e =>
                 LS_enable  <= '1'; --we leftshift the bits of e
                 state_next <= read_e_bit;
 
-                --State 10/11:
+                --State 10/10:
             when is_out_ready =>
                 valid_out <= '1';
+                if (is_last_msg = '1') then --this will be high if msgin_last was high at hanshake inn.
+                    msgout_last <= '1';
+                else
+                    msgout_last <= '0';
+                end if;
                 if (ready_out = '1') then --this means msgout_ready = 1              
-                    if (is_last_msg = '1') then
-                        state_next <= set_msgout_last;
-                    else
-                        state_next <= is_in_valid; --go to handshake inn. 
-                    end if;
+                    state_next  <= is_in_valid; --we go to the first state and hanshake inn, again.
                 else
                     state_next <= is_out_ready; --wait for handshake out.
                 end if;
 
-                --State 11/11:
-            when set_msgout_last => --is_out_ready_last (former name)
-                valid_out   <= '0';
-                msgout_last <= '1';
-                state_next  <= is_in_valid; --we go to the first state again.  
+
+
+ 
                 -- this is a default condition, to reset if we end up in an undefined state.
 
             when others =>
