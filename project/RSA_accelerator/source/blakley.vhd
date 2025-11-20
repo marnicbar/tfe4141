@@ -2,7 +2,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 
-entity blakely is
+entity blakley is
   generic (
     W        : integer := 256;
     TMP_BITS : integer := 256 + 2;
@@ -13,15 +13,16 @@ entity blakely is
     reset_n   : in  std_logic;
     b_enable  : in  std_logic;
 
-    A : in unsigned(W-1 downto 0);
-    B : in unsigned(W-1 downto 0);
-    N : in unsigned(W-1 downto 0);
+    -- *** INTERFACE NOW STD_LOGIC_VECTOR ***
+    A : in std_logic_vector(W-1 downto 0);
+    B : in std_logic_vector(W-1 downto 0);
+    N : in std_logic_vector(W-1 downto 0);
 
-    result_out : out unsigned(W-1 downto 0);
+    result_out : out std_logic_vector(W-1 downto 0);
     done_out   : out std_logic;
 
     ----------------------------------------------------------------------
-    -- DEBUG OUTPUTS (NEW)
+    -- DEBUG OUTPUTS (UNCHANGED)
     ----------------------------------------------------------------------
     debug_state     : out std_logic_vector(2 downto 0);
     debug_reg_temp  : out unsigned(TMP_BITS-1 downto 0);
@@ -33,28 +34,34 @@ entity blakely is
   );
 end entity;
 
-architecture rtl of blakely is
+architecture rtl of blakley is
 
   --------------------------------------------------------------------
-  -- Internal control signals
+  -- Internal signals (unsigned for arithmetic)
   --------------------------------------------------------------------
-  signal read_inputs_s : std_logic := '0';
-  signal process_bit_s : std_logic := '0';
-  signal comp_sub_1_s  : std_logic := '0';
-  signal comp_sub_2_s  : std_logic := '0';
-  signal output_en_s   : std_logic := '0';
+  signal A_u, B_u, N_u     : unsigned(W-1 downto 0);
+  signal result_u          : unsigned(W-1 downto 0);
 
-  signal temp_in_bounds_s : std_logic := '0';
-  signal bit_done_s       : std_logic := '0';
+  signal read_inputs_s     : std_logic := '0';
+  signal process_bit_s     : std_logic := '0';
+  signal comp_sub_1_s      : std_logic := '0';
+  signal comp_sub_2_s      : std_logic := '0';
+  signal output_en_s       : std_logic := '0';
 
-  --------------------------------------------------------------------
-  -- Debug state mapping
-  --------------------------------------------------------------------
-  -- Same encoding order as FSM: (INPUT, PROCESS_BIT, COMP_SUB1, COMP_SUB2, OUTPUT_S)
+  signal temp_in_bounds_s  : std_logic := '0';
+  signal bit_done_s        : std_logic := '0';
+
   type state_type is (INPUT, PROCESS_BIT, COMP_SUB1, COMP_SUB2, OUTPUT_S);
   signal fsm_state : state_type := INPUT;
 
 begin
+
+  --------------------------------------------------------------------
+  -- Convert Input SLV -> Unsigned
+  --------------------------------------------------------------------
+  A_u <= unsigned(A);
+  B_u <= unsigned(B);
+  N_u <= unsigned(N);
 
   --------------------------------------------------------------------
   -- DATAPATH
@@ -78,15 +85,12 @@ begin
       comp_sub_2  => comp_sub_2_s,
       output      => output_en_s,
 
-      A => A,
-      B => B,
-      N => N,
+      A => A_u,
+      B => B_u,
+      N => N_u,
 
-      result => result_out,
+      result => result_u,
 
-      ----------------------------------------------------------------
-      -- DEBUG PORT CONNECTIONS
-      ----------------------------------------------------------------
       dbg_reg_temp => debug_reg_temp,
       dbg_reg_a    => debug_reg_a,
       dbg_reg_b    => debug_reg_b,
@@ -116,11 +120,14 @@ begin
       done            => done_out
     );
 
+  --------------------------------------------------------------------
+  -- Convert output Unsigned -> SLV
+  --------------------------------------------------------------------
+  result_out <= std_logic_vector(result_u);
 
   --------------------------------------------------------------------
-  -- DEBUG FSM STATE EXPORT
+  -- DEBUG FSM STATE
   --------------------------------------------------------------------
-  -- NOTE: We re-instantiated the FSM type here for encoding.
   process(read_inputs_s, process_bit_s, comp_sub_1_s, comp_sub_2_s, output_en_s)
   begin
       if read_inputs_s = '1' then

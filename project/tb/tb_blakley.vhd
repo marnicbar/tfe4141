@@ -15,14 +15,14 @@ architecture sim of tb_blakley is
     constant CNT_W    : integer := 9;
 
     ------------------------------------------------------------
-    -- DUT signals
+    -- DUT signals (NOW std_logic_vector!)
     ------------------------------------------------------------
     signal clk      : std_logic := '0';
     signal reset_n  : std_logic := '0';
     signal b_enable : std_logic := '0';
 
-    signal A, B, N     : unsigned(W-1 downto 0);
-    signal result_out  : unsigned(W-1 downto 0);
+    signal A, B, N     : std_logic_vector(W-1 downto 0);
+    signal result_out  : std_logic_vector(W-1 downto 0);
     signal done_out    : std_logic;
 
     ------------------------------------------------------------
@@ -37,9 +37,9 @@ architecture sim of tb_blakley is
     signal dbg_A_bit     : std_logic;
 
     ------------------------------------------------------------
-    -- Expected result for A*B mod N
+    -- Expected result (NOW std_logic_vector)
     ------------------------------------------------------------
-    constant EXPECTED_RES : unsigned(W-1 downto 0) :=
+    constant EXPECTED_RES : std_logic_vector(W-1 downto 0) :=
         x"48FF651515CC31E26435A962E514F83284B30565D44494AF9778FAEA134346E9";
 
 begin
@@ -52,7 +52,7 @@ begin
     ------------------------------------------------------------
     -- DUT INSTANCE
     ------------------------------------------------------------
-    UUT : entity work.blakely
+    UUT : entity work.blakley
         generic map (
             W        => W,
             TMP_BITS => TMP_BITS,
@@ -84,7 +84,7 @@ begin
     begin
         if rising_edge(clk) then
             log(ID_SEQUENCER,
-                "STATE=" & to_hstring(dbg_state) &
+                "STATE= " & to_hstring(dbg_state) &
                 "  count=" & integer'image(to_integer(dbg_counter)) &
                 "  A_bit=" & std_logic'image(dbg_A_bit));
 
@@ -124,7 +124,7 @@ begin
         wait until rising_edge(clk);
         b_enable <= '0';
 
-        log(ID_SEQUENCER, "b_enable pulsed computation started.");
+        log(ID_SEQUENCER, "b_enable pulsed: computation started.");
 
         --------------------------------------------------------
         -- WAIT FOR COMPLETION
@@ -135,10 +135,12 @@ begin
         log(ID_SEQUENCER, "Computation finished. Checking result...");
 
         --------------------------------------------------------
-        -- VERIFICATION
+        -- UVVM CHECK (convert SLV to UNSIGNED)
         --------------------------------------------------------
         check_value(
-            result_out, EXPECTED_RES, ERROR,
+            unsigned(result_out),
+            unsigned(EXPECTED_RES),
+            ERROR,
             "Blakley top-level result mismatch!"
         );
 
