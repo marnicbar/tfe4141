@@ -118,18 +118,18 @@ begin
 
     blakley : entity work.blakley
         generic map(
-            bit_width   => C_block_size
+            W => C_block_size
         )
         port map(
-            A         => Blak_A,
-            B         => Blak_B,
-            N         => Blak_n,
-            clk       => clk,
-            reset_n   => reset_n,
-            bn_enable => Blak_enable,
+            A        => Blak_A,
+            B        => Blak_B,
+            N        => Blak_n,
+            clk      => clk,
+            reset_n  => reset_n,
+            b_enable => Blak_enable,
 
-            output        => Blak_C,
-            finished_calc => Blak_finished
+            result_out => Blak_C,
+            done_out   => Blak_finished
             -- dbg_state_sig => dbg_state_sig,
         );
 
@@ -178,24 +178,24 @@ begin
         check_value(Blak_A, std_logic_vector(to_unsigned(7, Blak_A'length)), ERROR, "Blak_A must be P_reg value when calculating C.");
         check_value(Blak_B, std_logic_vector(to_unsigned(1, Blak_B'length)), ERROR, "Blak_B must be C_reg value when calculating C.");
 
-        -- Simulate Blakley module finishing calculation
-        -- Blak_C        <= std_logic_vector(to_unsigned(7, Blak_C'length)); -- 7 * 1 mod 55 = 7
+        -- Wait for Blakley module to finish calculation
         wait_clocks_until(clk, Blak_finished);
         check_value(Blak_C, std_logic_vector(to_unsigned(7, Blak_C'length)), ERROR, "Blak_C must hold result of multiplication 7 * 1 mod 55 = 7");
+
+        -- Reset Blakley module and check registers after multiplication
+        pulse_1ns(clk);
         check_value(P_reg, std_logic_vector(to_unsigned(7, P_reg'length)), ERROR, "P_reg must hold previous value when calculating C.");
         check_value(C_reg, std_logic_vector(to_unsigned(7, C_reg'length)), ERROR, "C_reg must hold correct value after calculating C.");
 
-        -- -- Calc P
-        -- Blak_finished <= '0';
-        -- pulse_1ns(clk);
-        -- check_value(P_reg, std_logic_vector(to_unsigned(7, P_reg'length)), ERROR, "P_reg must hold previous value when calculating P.");
-        -- check_value(C_reg, std_logic_vector(to_unsigned(7, C_reg'length)), ERROR, "C_reg must be previous C_reg when calculating P.");
-        -- check_value(Blak_A, std_logic_vector(to_unsigned(7, Blak_A'length)), ERROR, "Blak_A must be P_reg value when calculating P.");
-        -- check_value(Blak_B, std_logic_vector(to_unsigned(7, Blak_B'length)), ERROR, "Blak_B must be P_reg value when calculating P.");
+        -- Calc P
+        pulse_1ns(clk);
+        check_value(Blak_A, std_logic_vector(to_unsigned(7, Blak_A'length)), ERROR, "Blak_A must be P_reg value when calculating P.");
+        check_value(Blak_B, std_logic_vector(to_unsigned(7, Blak_B'length)), ERROR, "Blak_B must be P_reg value when calculating P.");
 
-        -- -- Simulate Blakley module finishing calculation
-        -- Blak_C        <= std_logic_vector(to_unsigned(49, Blak_C'length)); -- 7 * 7 mod 55 = 49
-        -- Blak_finished <= '1';
+        -- -- Wait for Blakley module to finish calculation
+        -- wait_clocks_until(clk, Blak_finished);
+        -- check_value(Blak_C, std_logic_vector(to_unsigned(49, Blak_C'length)), ERROR, "Blak_C must hold result of multiplication 7 * 7 mod 55 = 49");
+
         -- pulse_1ns(clk);
         -- check_value(P_reg, std_logic_vector(to_unsigned(49, C_reg'length)), ERROR, "P_reg must hold correct value after calculating C.");
         -- check_value(C_reg, std_logic_vector(to_unsigned(7, C_reg'length)), ERROR, "C_reg must hold previous value after calculating P.");
