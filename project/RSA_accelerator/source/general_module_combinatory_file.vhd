@@ -14,6 +14,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.mod_exp_pkg.all; -- bring in the enum type
 
 --"entity" defines input and output interfaces, and generics/parameters.
 --In this case, this means interface towards the outside of the RSA core, 
@@ -27,6 +28,7 @@ entity exponentiation is
         ---------------------------------------------
         -- Only for use in testbenches and debugging:
         ---------------------------------------------
+        -- pragma translate_off
         dbg_LSR_e               : out std_logic_vector(C_block_size - 1 downto 0); --Left shift register for key_e
         dbg_P_reg               : out std_logic_vector(C_block_size - 1 downto 0); --register for value P
         dbg_C_reg               : out std_logic_vector(C_block_size - 1 downto 0); --register for value C
@@ -39,6 +41,8 @@ entity exponentiation is
         dbg_initialize_regs     : out std_logic; --loads initial values into C, P, LSR_e and e_counter
         dbg_is_last_msg_enable  : out std_logic; --signal which tells "is_last_msg" to record the "msgin_last" signal.
         dbg_is_last_msg         : out std_logic; --register which = 1, if msgin_last has been high.
+        dbg_state               : out state_type;
+        -- pragma translate_on
 
         --------------------------------------------------------
         -- Interface from general module to outside of RSA-core:
@@ -103,6 +107,11 @@ begin
     --instantiate the FSM_general_module and connect it to the required components
     FSM_general_module_1 : entity work.controller(Behavioral)
         port map(
+            -- debug
+            -- pragma translate_off
+            dbg_state => dbg_state,
+            -- pragma translate_on
+
             clk     => clk,
             reset_n => reset_n,
 
@@ -133,7 +142,7 @@ begin
     -- ***************************************************************************
     process(clk, reset_n) begin
         if reset_n = '0' then                -- Asynchronous reset 
-            P_reg <= message;                --P = message M
+            P_reg <= (others => '0');
             C_reg <= (others => '0');
             C_reg(0) <= '1';                 --C = [000...001]
         elsif rising_edge(clk) then          --combinatorial is synchronous to avoid latches
@@ -178,7 +187,7 @@ begin
     -- ***************************************************************************
     process (reset_n, clk) begin
         if (reset_n = '0') then
-            LSR_e <= key;      -------------WARNING: this assumes key`s LSB is also in index 0 on the righthand side of the register.
+            LSR_e <= (others => '0');
         elsif(rising_edge(clk)) then 
             if(initialize_regs = '1') then
                 LSR_e <= key;      -------------WARNING: this assumes key`s LSB is also in index 0 on the righthand side of the register.     
@@ -206,14 +215,16 @@ begin
             elsif (e_counter_increment = '1') then
                 e_bit_counter <= std_logic_vector(unsigned(e_bit_counter) + 1);
             end if;
-            if (unsigned(e_bit_counter) = 255) then --this condition means we have processed all bits of e.
+            if (e_counter_increment = '1' and unsigned(e_bit_counter) = 254 ) then --this condition means we have processed all bits of e.
                 e_counter_end <= '1';
             else
                 e_counter_end <= '0';
             end if;
         end if;
     end process;
-    
+
+
+
 
     -- ***************************************************************************
     -- is_last_msg. Being told to record the msgin_last-signal.

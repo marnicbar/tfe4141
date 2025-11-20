@@ -72,7 +72,7 @@ architecture sim of tb_mod_exp_combinatorial is
     signal initialize_regs     : std_logic; --loads initial values into C, P, LSR_e and e_counter
     signal is_last_msg_enable  : std_logic; --signal which tells "is_last_msg" to record the "msgin_last" signal.
     signal is_last_msg         : std_logic; --register which = 1, if msgin_last has been high.
-
+    signal dbg_state           : state_type;
 begin
     dut : entity work.exponentiation
         port map(
@@ -113,7 +113,8 @@ begin
             dbg_e_bit               => e_bit,
             dbg_initialize_regs     => initialize_regs,
             dbg_is_last_msg_enable  => is_last_msg_enable,
-            dbg_is_last_msg         => is_last_msg
+            dbg_is_last_msg         => is_last_msg,
+            dbg_state               => dbg_state
         );
     p_seq : process
 
@@ -127,9 +128,9 @@ begin
         key     <= x"33711769db52093a2521995f33d34d3602c0e038bb2b467edce7471a7be75818";
         reset_n <= '0';
         wait for 1 ns;
-        check_value(P_reg, message, ERROR, "P_reg shall hold the value of message during reset.");
+        check_value(P_reg, (P_reg'range => '0'), ERROR, "P_reg shall hold value zero after/during reset.");
         check_value(C_reg, std_logic_vector(to_unsigned(1, C_reg'length)), ERROR, "C_reg shall be initialized to 1 during reset.");
-        check_value(LSR_e, key, ERROR, "LSR_e shall hold the value of key during reset.");
+        check_value(LSR_e, (LSR_e'range => '0'), ERROR, "LSR_e shall hold value zero after/during reset");
         check_value(e_bit_counter, (e_bit_counter'range => '0'), ERROR, "e_bit_counter shall be zero during reset.");
         check_value(e_counter_end, '0', ERROR, "e_counter_end shall be '0' during reset.");
         check_value(is_last_msg, '0', ERROR, "is_last_msg shall be '0' during reset.");
@@ -185,20 +186,27 @@ begin
         pulse_1ns(clk);
         check_value(P_reg, std_logic_vector(to_unsigned(49, C_reg'length)), ERROR, "P_reg must hold correct value after calculating C.");
         check_value(C_reg, std_logic_vector(to_unsigned(7, C_reg'length)), ERROR, "C_reg must hold previous value after calculating P.");
-        check_value(e_bit_counter, std_logic_vector(to_unsigned(1, e_bit_counter'length)), ERROR, "e_bit_counter must be incremented after processing one bit.");
+        
 
         -- Increment e counter
         Blak_finished <= '0';
-        pulse_1ns(clk);
-        check_value(e_counter_end, '0', ERROR, "e_counter_end must be '0' after processing one bit.");
+        check_value(e_counter_increment, '1', ERROR, "e_counter_increment must be '1' after C and then P have been updated.");
+        pulse_1ns(clk);   --this clock makes e_bit_counter increment from 0 to 1.
+        check_value(e_bit_counter, std_logic_vector(to_unsigned(1, e_bit_counter'length)), ERROR, "e_bit_counter must be incremented after processing one bit.");
+        check_value(e_counter_end, '0', ERROR, "e_counter_end must be '0' having updated e_bit_counter.");
+        
 
         -- Leftshift e
-        pulse_1ns(clk);
+        pulse_1ns(clk); --this clock switches from "is_e_processed state", to "leftshift_e state".
+        check_value(e_counter_increment, '0', ERROR, "e_counter_increment must be '0' after it has incremented once.");
+
+        --i am here now.
+        pulse_1ns(clk); --this clock switches from "leftshift_e"-state to "read_e_bit"-state
+        --the e_bit should still be = 1 here. We are reading the second 1-bit in the key here.
         check_value(e_bit, '1', ERROR, "e_bit must be updated to new LSB of LSR_e after shift.");
 
         -- Calc C
-        pulse_1ns(clk);
-        pulse_1ns(clk); -- Two clocks to get to state calc_C
+        pulse_1ns(clk); -- Two clocks to get from "read_e_bit"-state, to state "calc_C"
         -- check_value(Blak_enable, '1', ERROR, "Blak_enable must be '1' to start calculation of C.");
         -- check_value(pc_select, '1', ERROR, "pc_select must be '1' when calculating C.");
         check_value(Blak_A, std_logic_vector(to_unsigned(49, Blak_A'length)), ERROR, "Blak_A must be P_reg value when calculating C.");
@@ -207,51 +215,59 @@ begin
         -- Simulate Blakley module finishing calculation
         Blak_C        <= std_logic_vector(to_unsigned(13, Blak_C'length)); -- 49 * 7 mod 55 = 13
         Blak_finished <= '1';
-        pulse_1ns(clk);
+        pulse_1ns(clk);  --this clock switches from "calc_C", to "reset_blak_module".
         check_value(P_reg, std_logic_vector(to_unsigned(49, P_reg'length)), ERROR, "P_reg must hold previous value when calculating C.");
         check_value(C_reg, std_logic_vector(to_unsigned(13, C_reg'length)), ERROR, "C_reg must hold correct value after calculating C.");
 
         -- Calc P
         Blak_finished <= '0';
-        pulse_1ns(clk);
+        pulse_1ns(clk); --from "reset_blak_module", to "calc_P". 
         check_value(Blak_A, std_logic_vector(to_unsigned(49, Blak_A'length)), ERROR, "Blak_A must be P_reg value when calculating P.");
         check_value(Blak_B, std_logic_vector(to_unsigned(49, Blak_B'length)), ERROR, "Blak_B must be P_reg value when calculating P.");
 
         -- Simulate Blakley module finishing calculation
         Blak_C        <= std_logic_vector(to_unsigned(36, Blak_C'length)); -- 49 * 49 mod 55 = 36
         Blak_finished <= '1';
-        pulse_1ns(clk);
+        pulse_1ns(clk); --from "calc_p", to "increment_e".
         check_value(P_reg, std_logic_vector(to_unsigned(36, C_reg'length)), ERROR, "P_reg must hold result of multiplication.");
         check_value(C_reg, std_logic_vector(to_unsigned(13, C_reg'length)), ERROR, "C_reg must hold previous value.");
-        check_value(e_bit_counter, std_logic_vector(to_unsigned(2, e_bit_counter'length)), ERROR, "e_bit_counter must be incremented after processing one bit.");
+        
 
         -- Increment e counter
         Blak_finished <= '0';
-        pulse_1ns(clk);
+        pulse_1ns(clk); --from "increment_e", to "is_e_processed".
+        check_value(e_bit_counter, std_logic_vector(to_unsigned(2, e_bit_counter'length)), ERROR, "e_bit_counter must be incremented after processing one bit.");
         check_value(e_counter_end, '0', ERROR, "e_counter_end must be '0' after processing second bit.");
 
+
+
         -- Leftshift e
-        pulse_1ns(clk);
-        check_value(e_bit, '0', ERROR, "e_bit must be updated to new LSB of LSR_e after shift.");
+        pulse_1ns(clk); --from "is_e_processed" to "leftshift_e".
+        pulse_1ns(clk); --from "leftshift_e" to "read_e_bit".
+        check_value(e_bit, '0', ERROR, "e_bit should be the first 0, when reading from LSB (1, 1, 0 <-this one, 0, 0...)");
+
 
         -- Calc P (since e_bit = 0, we skip calc C)
-        pulse_1ns(clk);
-        pulse_1ns(clk); -- Two clocks to get to state calc_P
+        pulse_1ns(clk); -- from "read_e_bit", to "calk_P".
         check_value(Blak_A, std_logic_vector(to_unsigned(36, Blak_A'length)), ERROR, "Blak_A must be P_reg value when calculating P.");
         check_value(Blak_B, std_logic_vector(to_unsigned(36, Blak_B'length)), ERROR, "Blak_B must be P_reg value when calculating P.");
 
         -- Simulate Blakley module finishing calculation
         Blak_C        <= std_logic_vector(to_unsigned(31, Blak_C'length)); -- 36 * 36 mod 55 = 31
         Blak_finished <= '1';
-        pulse_1ns(clk);
+        pulse_1ns(clk); --from "calc_P" to "increment_e".
         check_value(P_reg, std_logic_vector(to_unsigned(31, C_reg'length)), ERROR, "P_reg must hold result of multiplication.");
         check_value(C_reg, std_logic_vector(to_unsigned(13, C_reg'length)), ERROR, "C_reg must hold previous value.");
-        check_value(e_bit_counter, std_logic_vector(to_unsigned(3, e_bit_counter'length)), ERROR, "e_bit_counter must be incremented after processing one bit.");
+        
 
         -- Increment e counter
         Blak_finished <= '0';
-        pulse_1ns(clk);
+        check_value(e_bit_counter, std_logic_vector(to_unsigned(2, e_bit_counter'length)), ERROR, "e_bit_counter should be 2, before the clock that increments it to 3");
+        pulse_1ns(clk); --from "increment_e", to "is_e_processed".
+        check_value(e_bit_counter, std_logic_vector(to_unsigned(3, e_bit_counter'length)), ERROR, "e_bit_counter must be incremented after processing one bit.");
         check_value(e_counter_end, '0', ERROR, "e_counter_end must be '0' after processing third bit.");
+
+-------------eg er her nå.------------------------------
 
         -------------------------------------------------
         -- Now three bits of exponent have been processed.
@@ -260,18 +276,26 @@ begin
 
         -- Process remaining bits quickly until e_counter_end = '1'
         Blak_finished <= '1';
-        wait_clocks_until(clk, e_counter_end);
+        wait_clocks_until(clk, e_counter_end); --runs the clock, until we are in "is_e_processed"-state.
+        check_value(state_type'pos(dbg_state), state_type'pos(is_e_processed), ERROR, "State must be 'is_e_processed'");
         check_value(e_counter_end, '1', ERROR, "e_counter_end must be '1' after processing all bits.");
-
-        -- Set valid out
+        
+         -- Set valid out
+        check_value(valid_out, '0', ERROR, "valid_out must be '0' before we handshake out.");
+        pulse_1ns(clk); --from "is_e_processed", to "is_out_ready".
         ready_out <= '1';
-        pulse_1ns(clk);
-        check_value(valid_out, '1', ERROR, "valid_out must be '1' when computation is done.");
         check_value(result, std_logic_vector(to_unsigned(13, result'length)), ERROR, "Result must hold final computed value.");
+        check_value(valid_out, '1', ERROR, "valid_out must be '1' when computation is done.");
+        
 
         -- Check is_last_msg
-        pulse_1ns(clk);
-        check_value(is_last_msg, '1', ERROR, "is_last_msg must be '1' since msgin_last was '1' at start.");
+        pulse_1ns(clk); --from "is out ready", to "set_msgout_last".
+        check_value(msgout_last, '1', ERROR, "msgout_last must be '1' as this was the final handshake out");
+
+        --send it back to handshake-inn-state again.
+        pulse_1ns(clk); --from "set_msgout_last", to "is_in_valid".
+        check_value(msgout_last, '0', ERROR, "msgout_last should be = 0, when in handshake inn again.");
+        check_value(state_type'pos(dbg_state), state_type'pos(is_in_valid), ERROR, "State must be 'is_in_valid' ");
 
         -- Final reporting
         -- report_msg_id_panel(VOID); -- Prints enabled/disabled log IDs (optional)
