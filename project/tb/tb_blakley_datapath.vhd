@@ -1,8 +1,6 @@
--- tb_blakley_datapath.vhd
--- UVVM testbench for blakley_datapath using check_value() style from tb_blakley_fsm
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 library uvvm_util;
 context uvvm_util.uvvm_util_context;
@@ -11,234 +9,195 @@ entity tb_blakley_datapath is
 end entity;
 
 architecture sim of tb_blakley_datapath is
-    constant bit_width : positive := 256;
+
+    constant W        : integer := 256;
+    constant TMP_BITS : integer := W + 2;
+    constant CNT_W    : integer := 9;
 
     -- DUT signals
-    signal clk     : std_logic := '0';
-    signal reset_n : std_logic := '0';
+    signal clk            : std_logic := '0';
+    signal reset_n        : std_logic := '0';
 
-    signal A, B, N : std_logic_vector(bit_width-1 downto 0) := (others => '0');
-
-    -- Control signals (driven by testbench)
-    signal load_inputs    : std_logic := '0';
-    signal shift_a        : std_logic := '0';
-    signal add_en         : std_logic := '0';
-    signal sub1_en        : std_logic := '0';
-    signal sub2_en        : std_logic := '0';
-    signal do_store_shift : std_logic := '0';
+    signal read_inputs    : std_logic := '0';
+    signal process_bit    : std_logic := '0';
+    signal comp_sub_1     : std_logic := '0';
+    signal comp_sub_2     : std_logic := '0';
     signal output_en      : std_logic := '0';
 
-    -- Feedback from datapath
-    signal a_msb  : std_logic := '0';
-    signal gt_n_1 : std_logic := '0';
-    signal gt_n_2 : std_logic := '0';
+    signal temp_in_bounds : std_logic;
+    signal bit_done       : std_logic;
 
-    -- Output
-    signal Output : std_logic_vector(bit_width-1 downto 0) := (others => '0');
+    signal A, B, N        : unsigned(W-1 downto 0);
+    signal result         : unsigned(W-1 downto 0);
 
-    -- Helpers
-    -- replace the old function with this
-    function to_slv(val : natural; width : positive) return std_logic_vector is
-        begin
-            return std_logic_vector(to_unsigned(val, width));
-        end function to_slv;
+    -- Debug wires from DUT
+    signal dbg_reg_temp : unsigned(TMP_BITS-1 downto 0);
+    signal dbg_reg_a    : unsigned(W-1 downto 0);
+    signal dbg_reg_b    : unsigned(W-1 downto 0);
+    signal dbg_reg_n    : unsigned(W-1 downto 0);
+    signal dbg_counter  : unsigned(CNT_W-1 downto 0);
+    signal dbg_A_bit    : std_logic;
 
+    constant ZERO256 : unsigned(W-1 downto 0) := (others => '0');
+
+    --------------------------------------------------------------------
+    -- Golden Blakley model: (A * B) mod N using the same algorithmic
+    -- structure as the datapath, but purely behavioral.
+    --------------------------------------------------------------------
+    function golden_blakley(Ax, Bx, Nx : unsigned) return unsigned is
+        variable R     : unsigned(TMP_BITS-1 downto 0) := (others => '0');
+        variable N_ext : unsigned(TMP_BITS-1 downto 0);
+        variable B_ext : unsigned(TMP_BITS-1 downto 0);
+    begin
+        assert Nx /= ZERO256
+          report "golden_blakley: modulus N is zero!" severity failure;
+
+        N_ext := resize(Nx, TMP_BITS);
+        B_ext := resize(Bx, TMP_BITS);
+
+        -- Process bits of A from MSB (W-1) to LSB (0)
+        for i in 0 to W-1 loop
+            -- R := 2R
+            R := shift_left(R, 1);
+
+            -- If current bit of A is 1, R := R + B
+            if Ax(W-1 - i) = '1' then
+                R := R + B_ext;
+            end if;
+
+            -- At most two reductions by N_ext (Blakley bound 3N-3)
+            if R >= N_ext then
+                R := R - N_ext;
+            end if;
+            if R >= N_ext then
+                R := R - N_ext;
+            end if;
+        end loop;
+
+        return R(W-1 downto 0);
+    end function;
 
 begin
-    ----------------------------------------------------------------
-    -- Instantiate DUT
-    ----------------------------------------------------------------
-    uut: entity work.blakley_datapath
-        generic map (
-            bit_width => bit_width
+
+    --------------------------------------------------------------------
+    -- DUT instantiation
+    --------------------------------------------------------------------
+    DUT: entity work.blakley_datapath
+        generic map(
+            W        => W,
+            TMP_BITS => TMP_BITS,
+            CNT_W    => CNT_W
         )
-        port map (
+        port map(
             clk            => clk,
             reset_n        => reset_n,
+            read_inputs    => read_inputs,
+            process_bit    => process_bit,
+            comp_sub_1     => comp_sub_1,
+            comp_sub_2     => comp_sub_2,
+            output         => output_en,
             A              => A,
             B              => B,
             N              => N,
-            load_inputs    => load_inputs,
-            shift_a        => shift_a,
-            add_en         => add_en,
-            sub1_en        => sub1_en,
-            sub2_en        => sub2_en,
-            do_store_shift => do_store_shift,
-            output_en      => output_en,
-            a_msb          => a_msb,
-            gt_n_1         => gt_n_1,
-            gt_n_2         => gt_n_2,
-            Output         => Output
+            temp_in_bounds => temp_in_bounds,
+            bit_done       => bit_done,
+            result         => result,
+
+            dbg_reg_temp => dbg_reg_temp,
+            dbg_reg_a    => dbg_reg_a,
+            dbg_reg_b    => dbg_reg_b,
+            dbg_reg_n    => dbg_reg_n,
+            dbg_counter  => dbg_counter,
+            dbg_A_bit    => dbg_A_bit
         );
 
-    ----------------------------------------------------------------
-    -- Clock: 100 MHz
-    ----------------------------------------------------------------
-    clk_process : process
-    begin
-        loop
-            clk <= '0';
-            wait for 5 ns;
-            clk <= '1';
-            wait for 5 ns;
-        end loop;
-    end process;
+    --------------------------------------------------------------------
+    -- Clock
+    --------------------------------------------------------------------
+    clk <= not clk after 5 ns;
 
-    ----------------------------------------------------------------
-    -- Monitor: print a line every rising edge for debugging
-    -- NOTE: Output removed from this concatenation to avoid & type mismatch
-    ----------------------------------------------------------------
-    monitor : process
+    --------------------------------------------------------------------
+    -- TEST SEQUENCE – Blakley FSM emulation
+    --------------------------------------------------------------------
+    stim_proc : process
+        variable expected : unsigned(W-1 downto 0);
     begin
-        wait until rising_edge(clk);
-        log(ID_LOG_HDR,
-            "T=" & time'image(now)
-            & " a_msb=" & std_logic'image(a_msb)
-            & " gt1=" & std_logic'image(gt_n_1)
-            & " gt2=" & std_logic'image(gt_n_2)
-            & " load=" & std_logic'image(load_inputs)
-            & " add=" & std_logic'image(add_en)
-            & " sub1=" & std_logic'image(sub1_en)
-            & " store_shift=" & std_logic'image(do_store_shift)
-            & " out_en=" & std_logic'image(output_en)
-        );
-        wait;
-    end process;
 
-    ----------------------------------------------------------------
-    -- Test sequence (mirrors style of tb_blakley_fsm check_value usage)
-    ----------------------------------------------------------------
-    tb_process : process
-        constant zero  : std_logic_vector(bit_width-1 downto 0) := (others => '0');
-        constant one   : std_logic_vector(bit_width-1 downto 0) := to_slv(1, bit_width);
-        constant two   : std_logic_vector(bit_width-1 downto 0) := to_slv(2, bit_width);
-        constant three : std_logic_vector(bit_width-1 downto 0) := to_slv(3, bit_width);
-    begin
-        set_log_destination(CONSOLE_AND_LOG);
-        log(ID_LOG_HDR, "Starting focused datapath testbench (load/add/sub/shift/store checks)");
+        log(ID_LOG_HDR, "Starting Blakley datapath testbench");
 
-        -- Reset: hold low for >=2 clock cycles
+        ----------------------------------------------------------------
+        -- RESET
+        ----------------------------------------------------------------
         reset_n <= '0';
-        load_inputs <= '0';
-        shift_a <= '0';
-        add_en <= '0';
-        sub1_en <= '0';
-        sub2_en <= '0';
-        do_store_shift <= '0';
-        output_en <= '0';
-        wait until rising_edge(clk);
-        wait until rising_edge(clk);
-
-        -- Release reset and wait one clock for sequential to sample it
+        wait for 50 ns;
         reset_n <= '1';
         wait until rising_edge(clk);
 
         ----------------------------------------------------------------
-        -- Phase 1: Load inputs A=1, B=3, N=2
+        -- Load Test Vectors
         ----------------------------------------------------------------
-        A <= one;
-        B <= three;
-        N <= two;
-        load_inputs <= '1';
-        wait for 1 ns;                 -- assert before sampling edge (avoid delta race)
-        wait until rising_edge(clk);   -- load sampled here
-        load_inputs <= '0';
+        A <= x"0123456789ABCDEF_FEDCBA9876543210_0011223344556677_8899AABBCCDDEEFF";
+        B <= x"AAAA5555AAAA5555_0123456789ABCDEF_FFFFFFFFFFFFFFFF_0000000000000001";
+        N <= x"FFFFFFFFFFFFFFFF_FFFFFFFFFFFFFFFF_FFFFFFFFFFFFFFFF_FFFFFFFFFFFFFFFF";
+
+        ----------------------------------------------------------------
+        -- LOAD INPUTS INTO DUT
+        ----------------------------------------------------------------
+        read_inputs <= '1';
+        wait until rising_edge(clk);
+        read_inputs <= '0';
         wait until rising_edge(clk);
 
-        -- After load, Output should still be zero (reg_out initialized to 0)
-        check_value( (Output = zero), TRUE, ERROR,
-                     "After load, Output should be 0");
+        check_value(dbg_reg_a, A, ERROR, "reg_a mismatch");
+        check_value(dbg_reg_b, B, ERROR, "reg_b mismatch");
+        check_value(dbg_reg_n, N, ERROR, "reg_n mismatch");
 
         ----------------------------------------------------------------
-        -- Phase 2: Add B (3) into reg_temp and present it on Output
+        -- PERFORM 256 ITERATIONS OF BLAKLEY ALGORITHM
         ----------------------------------------------------------------
-        add_en <= '1';
-        wait for 1 ns;
-        wait until rising_edge(clk);   -- add sampled
-        add_en <= '0';
-        wait until rising_edge(clk);
+        for i in 0 to W-1 loop
 
-        -- Move reg_temp to reg_out via output_en
+            -- STEP 1: PROCESS BIT
+            process_bit <= '1';
+            wait until rising_edge(clk);
+            process_bit <= '0';
+            wait until rising_edge(clk);
+
+            -- STEP 2: FIRST REDUCTION
+            if temp_in_bounds = '1' then
+                comp_sub_1 <= '1';
+                wait until rising_edge(clk);
+                comp_sub_1 <= '0';
+                wait until rising_edge(clk);
+            end if;
+
+            -- STEP 3: SECOND REDUCTION
+            if temp_in_bounds = '1' then
+                wait until rising_edge(clk);
+                comp_sub_2 <= '1';
+                wait until rising_edge(clk);
+                comp_sub_2 <= '0';
+                wait until rising_edge(clk);
+            end if;
+
+        end loop;
+
+        ----------------------------------------------------------------
+        -- OUTPUT RESULT
+        ----------------------------------------------------------------
         output_en <= '1';
-        wait for 1 ns;
         wait until rising_edge(clk);
         output_en <= '0';
         wait until rising_edge(clk);
 
-        check_value( (Output = three), TRUE, ERROR,
-                     "After add_en and output_en, Output should be 3");
-
-        -- With reg_temp=3 and N=2, gt_n_* should indicate reg_temp >= N -> '1'
-        check_value( (gt_n_1 = '1'), TRUE, ERROR,
-                     "gt_n_1 should be '1' when reg_temp >= N");
-        check_value( (gt_n_2 = '1'), TRUE, ERROR,
-                     "gt_n_2 should be '1' when reg_temp >= N");
-
         ----------------------------------------------------------------
-        -- Phase 3: Subtract N (2) from reg_temp (3) -> reg_temp becomes 1
+        -- GOLDEN MODEL (Blakley)
         ----------------------------------------------------------------
-        sub1_en <= '1';
-        wait for 1 ns;
-        wait until rising_edge(clk);   -- subtraction sampled
-        sub1_en <= '0';
-        wait until rising_edge(clk);
+        expected := golden_blakley(A, B, N);
 
-        output_en <= '1';
-        wait for 1 ns;
-        wait until rising_edge(clk);
-        output_en <= '0';
-        wait until rising_edge(clk);
+        check_value(result, expected, ERROR, "Blakley datapath result mismatch!");
+        log(ID_LOG_HDR, "TEST PASSED: Hardware matches Blakley golden model");
 
-        check_value( (Output = one), TRUE, ERROR,
-                     "After subtraction and output_en, Output should be 1");
-
-        -- Now reg_temp=1 < N=2 -> gt_n_* should be '0'
-        check_value( (gt_n_1 = '0'), TRUE, ERROR,
-                     "gt_n_1 should be '0' when reg_temp < N");
-        check_value( (gt_n_2 = '0'), TRUE, ERROR,
-                     "gt_n_2 should be '0' when reg_temp < N");
-
-        ----------------------------------------------------------------
-        -- Phase 4: do_store_shift: reg_out <= reg_temp; reg_temp <= reg_temp << 1
-        ----------------------------------------------------------------
-        do_store_shift <= '1';
-        wait for 1 ns;
-        wait until rising_edge(clk);   -- store+shift sampled
-        do_store_shift <= '0';
-        wait until rising_edge(clk);
-
-        -- Output should hold previous reg_temp (which was 1)
-        check_value( (Output = one), TRUE, ERROR,
-                     "After do_store_shift, Output should hold previous reg_temp (1)");
-
-        ----------------------------------------------------------------
-        -- Phase 5: Shift A and check a_msb feedback
-        ----------------------------------------------------------------
-        -- A was 1 at LSB; shift once -> reg_a becomes 2, MSB still '0'
-        shift_a <= '1';
-        wait for 1 ns;
-        wait until rising_edge(clk);
-        shift_a <= '0';
-        wait until rising_edge(clk);
-
-        check_value( (a_msb = '0'), TRUE, ERROR,
-                     "a_msb should be '0' after single shift of small A");
-
-        -- Drive A with MSB set, reload inputs and check a_msb
-        A <= (others => '0');
-        A(bit_width-1) <= '1';  -- set MSB
-        load_inputs <= '1';
-        wait for 1 ns;
-        wait until rising_edge(clk);
-        load_inputs <= '0';
-        wait until rising_edge(clk);
-
-        check_value( (a_msb = '1'), TRUE, ERROR,
-                     "a_msb should be '1' when MSB of A is set");
-
-        log(ID_LOG_HDR, "Datapath checks executed");
-
-        -- End test
         std.env.stop;
         wait;
     end process;
