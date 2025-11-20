@@ -61,7 +61,7 @@ TB_COMBINED  :=  \
 	$(TB_DIR)/helpers.vhd \
 	$(TB_DIR)/tb_combined.vhd
 TOP_COMBINED := tb_combined
-BUILD_DIR_COMBINED := $(BUILD_DIR)/$(TOP_EXP_COMB)
+BUILD_DIR_COMBINED := $(BUILD_DIR)/$(TOP_COMBINED)
 
 # ============================================================
 # Targets

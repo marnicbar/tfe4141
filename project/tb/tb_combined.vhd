@@ -5,7 +5,6 @@ use ieee.numeric_std.all;
 library uvvm_util;
 context uvvm_util.uvvm_util_context;
 
-use work.mod_exp_pkg.all; -- bring in the enum type
 use work.helpers_pkg.all; -- bring in the pulse_1ns procedure
 
 entity tb_combined is
