@@ -2,6 +2,10 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 
+library IEEE;
+use IEEE.STD_LOGIC_1164.all;
+use IEEE.NUMERIC_STD.all;
+
 entity blakley is
   generic (
     W        : integer := 256;
@@ -22,8 +26,9 @@ entity blakley is
     done_out   : out std_logic;
 
     ----------------------------------------------------------------------
-    -- DEBUG OUTPUTS (UNCHANGED)
+    -- DEBUG OUTPUTS - HIDDEN FROM SYNTHESIS
     ----------------------------------------------------------------------
+    -- pragma translate_off
     debug_state     : out std_logic_vector(2 downto 0);
     debug_reg_temp  : out unsigned(TMP_BITS-1 downto 0);
     debug_reg_a     : out unsigned(W-1 downto 0);
@@ -31,8 +36,10 @@ entity blakley is
     debug_reg_n     : out unsigned(W-1 downto 0);
     debug_counter   : out unsigned(CNT_W-1 downto 0);
     debug_A_bit     : out std_logic
+    -- pragma translate_on
   );
-end entity;
+end entity blakley;
+
 
 architecture rtl of blakley is
 
