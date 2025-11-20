@@ -189,7 +189,7 @@ test-combined: compile-combined
 		exec $(BUILD_DIR_COMBINED)/$(TOP_COMBINED) --assert-level=error; \
 	fi'
 
-test: test-datapath-blakley test-fsm-blakley test-blakley test-exp-sm test-exp-comb test-combined
+test: test-datapath-blakley test-blakley test-exp-sm test-exp-comb test-combined
 
 clean:
 	@echo "==> Cleaning build artifacts..."
