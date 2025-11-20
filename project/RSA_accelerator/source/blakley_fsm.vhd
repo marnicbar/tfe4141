@@ -2,141 +2,85 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 
-entity blakley_fsm is
-    port (
-        clk, reset_n : in std_logic;
-        bn_enable    : in std_logic;
+entity blakley_controller is
+    port(
+        clk     : in std_logic;
+        rst_n   : in std_logic;  -- active low
 
-        a_msb, gt_n_1, gt_n_2 : in std_logic;
+        b_enable : in std_logic; -- starts the Blakley computation
 
-        load_inputs, shift_a, add_en, sub1_en, sub2_en,
-        do_store_shift, output_en : out std_logic;
+        bit_done       : in std_logic; -- true when all bits of A processed
+        temp_in_bounds : in std_logic; -- podemos apagar
 
-        finished_calc : out std_logic;
-        dbg_state     : out std_logic_vector(3 downto 0)
+        ----------------------------Control signals----------------------
+        read_inputs  : out std_logic;
+        process_bit  : out std_logic;
+        comp_sub_1   : out std_logic;
+        comp_sub_2   : out std_logic;
+        output_en    : out std_logic;
+        -----------------------------------------------------------------
+        done         : out std_logic
     );
-end blakley_fsm;
+end blakley_controller;
 
-architecture behavioral of blakley_fsm is
+architecture fsm of blakley_controller is
 
-    type state_type is (
-        read_inputs,
-        initial_shifting,
-        addition,
-        comp1,
-        sub1,
-        comp2,
-        sub2,
-        store_shift,
-        saida
-    );
+    type state_type is (INPUT, PROCESS_S, OUTPUT_S);
 
-    signal state, state_next : state_type;
-    signal cnt_int : unsigned(8 downto 0) := (others => '0');
+    signal state    : state_type := INPUT;
+    signal done_reg : std_logic := '0';
 
 begin
 
-    ------------------------------------------------------------
-    -- Sequential process: state register & counter update
-    ------------------------------------------------------------
-    process(clk, reset_n)
+    --------------------------------------------------------------------
+    -- FSM
+    --------------------------------------------------------------------
+    BLAK_FSM : process(clk, rst_n)
     begin
-        if reset_n = '0' then
-            state   <= read_inputs;
-            cnt_int <= (others => '0');
+        if rst_n = '0' then
+            state    <= INPUT;
+            done_reg <= '0';
+
         elsif rising_edge(clk) then
-            state <= state_next;
-            if state = store_shift then
-                if cnt_int < to_unsigned(255, cnt_int'length) then
-                    cnt_int <= cnt_int + 1;
-                end if;
-            end if;
+            case state is
+
+                when INPUT =>
+                    done_reg <= '0';
+                    if b_enable = '1' then
+                        -- next cycle we start shifting bits
+                        state <= PROCESS_S;
+                    end if;
+
+                when PROCESS_S =>
+                    if bit_done = '1' then
+                        state <= OUTPUT_S;
+                    else
+                        state <= PROCESS_S;
+                    end if;
+
+                when OUTPUT_S =>
+                    done_reg <= '1';
+                    -- stay here until reset (one-shot op)
+                    state <= OUTPUT_S;
+
+                when others =>
+                    state <= INPUT;
+
+            end case;
         end if;
     end process;
 
-    ------------------------------------------------------------
-    -- Combinational control logic
-    ------------------------------------------------------------
-    process(state, bn_enable, a_msb, gt_n_1, gt_n_2, cnt_int)
-    begin
-        -- default outputs
-        load_inputs     <= '0';
-        shift_a         <= '0';
-        add_en          <= '0';
-        sub1_en         <= '0';
-        sub2_en         <= '0';
-        do_store_shift  <= '0';
-        output_en       <= '0';
-        finished_calc   <= '0';
-        state_next      <= state;
+    --------------------------------------------------------------------
+    -- CONTROL SIGNALS
+    --------------------------------------------------------------------
+    read_inputs <= '1' when state = INPUT   else '0';
+    process_bit <= '1' when state = PROCESS_S else '0';
 
-        case state is
-            when read_inputs =>
-                if bn_enable = '1' then
-                    load_inputs <= '1';
-                    state_next  <= initial_shifting;
-                end if;
+    -- No external subtract control anymore – handled inside datapath
+    comp_sub_1  <= '0';
+    comp_sub_2  <= '0';
 
-            when initial_shifting =>
-                shift_a    <= '1';
-                state_next <= addition;
+    output_en   <= '1' when state = OUTPUT_S else '0';
+    done        <= done_reg;
 
-            when addition =>
-                if a_msb = '1' then
-                    add_en <= '1';
-                end if;
-                state_next <= comp1;
-
-            when comp1 =>
-                if gt_n_1 = '1' then
-                    state_next <= sub1;
-                else
-                    state_next <= store_shift;
-                end if;
-
-            when sub1 =>
-                sub1_en    <= '1';
-                state_next <= comp2;
-
-            when comp2 =>
-                if gt_n_2 = '1' then
-                    state_next <= sub2;
-                else
-                    state_next <= store_shift;
-                end if;
-
-            when sub2 =>
-                sub2_en    <= '1';
-                state_next <= store_shift;
-
-            when store_shift =>
-                do_store_shift <= '1';
-                if cnt_int = to_unsigned(255, cnt_int'length) then
-                    state_next <= saida;
-                else
-                    state_next <= initial_shifting;
-                end if;
-
-            when saida =>
-                output_en     <= '1';
-                finished_calc <= '1';
-        end case;
-    end process;
-
- 
-
-  dbg_state <=
-    "0000" when state = read_inputs       else
-    "0001" when state = initial_shifting  else
-    "0010" when state = addition          else
-    "0011" when state = comp1             else
-    "0100" when state = sub1              else
-    "0101" when state = comp2             else
-    "0110" when state = sub2              else
-    "0111" when state = store_shift       else
-    "1000"; -- saida
-
-
-
-
-end behavioral;
+end architecture;

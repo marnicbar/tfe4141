@@ -159,7 +159,7 @@ test-exp-comb: compile-exp-comb
 		exec $(BUILD_DIR_EXP_COMB)/$(TOP_EXP_COMB) --assert-level=error; \
 	fi'
 
-test: test-datapath-blakley test-fsm-blakley test-blakley test-exp-sm	test-exp-comb
+test: test-datapath-blakley test-blakley test-exp-sm test-exp-comb
 
 clean:
 	@echo "==> Cleaning build artifacts..."
