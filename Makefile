@@ -35,7 +35,7 @@ TOP_DATAPATH_BLAKLEY := tb_blakley_datapath
 BUILD_DIR_DATAPATH_BLAKLEY := $(BUILD_DIR)/$(TOP_DATAPATH_BLAKLEY)
 
 # Modular exponentiation
-DUT_EXP_SM := $(SRC_DIR)/FSM_general_module_1.vhd
+DUT_EXP_SM := $(SRC_DIR)/mod_exp_fsm.vhd
 TB_EXP_SM  := \
 	$(TB_DIR)/helpers.vhd \
 	$(TB_DIR)/tb_mod_exp_sm.vhd
@@ -43,8 +43,8 @@ TOP_EXP_SM := tb_mod_exp_sm
 BUILD_DIR_EXP_SM := $(BUILD_DIR)/$(TOP_EXP_SM)
 # Modular exponentiation combinatorial logic
 DUT_EXP_COMB := \
-	$(SRC_DIR)/FSM_general_module_1.vhd \
-	$(SRC_DIR)/general_module_combinatory_file.vhd
+	$(SRC_DIR)/mod_exp_fsm.vhd \
+	$(SRC_DIR)/mod_exp_comb.vhd
 TB_EXP_COMB  :=  \
 	$(TB_DIR)/helpers.vhd \
 	$(TB_DIR)/tb_mod_exp_combinatorial.vhd
@@ -52,8 +52,8 @@ TOP_EXP_COMB := tb_mod_exp_combinatorial
 BUILD_DIR_EXP_COMB := $(BUILD_DIR)/$(TOP_EXP_COMB)
 # Combined modules
 DUT_COMBINED := \
-	$(SRC_DIR)/FSM_general_module_1.vhd \
-	$(SRC_DIR)/general_module_combinatory_file.vhd \
+	$(SRC_DIR)/mod_exp_fsm.vhd \
+	$(SRC_DIR)/mod_exp_comb.vhd \
 	$(SRC_DIR)/blakley_datapath.vhd \
 	$(SRC_DIR)/blakley_fsm.vhd\
 	$(SRC_DIR)/blakley.vhd

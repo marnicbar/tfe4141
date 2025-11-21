@@ -105,7 +105,7 @@ architecture expBehave of exponentiation is
 begin
 
     --instantiate the FSM_general_module and connect it to the required components
-    FSM_general_module_1 : entity work.controller(Behavioral)
+    mod_exp_fsm : entity work.controller(Behavioral)
         port map(
             -- debug
             -- pragma translate_off
