@@ -135,7 +135,7 @@ begin
     p_seq : process
     begin
         set_log_destination(CONSOLE_AND_LOG);
-        log(ID_LOG_HDR, "Starting test bench for modular exponentiation combinatorial logic...");
+        log(ID_LOG_HDR, "Starting test bench combined (Modular exponentiation and Blakley) logic...");
 
         -- Test reset behavior
         clk     <= '0';
@@ -287,20 +287,18 @@ begin
         wait_clocks_until(clk, e_counter_end); --runs the clock, until we are in "is_e_processed"-state.
         check_value(e_counter_end, '1', ERROR, "e_counter_end must be '1' after processing all bits.");
 
-        -- Set valid out
+        -- go to handshake out.
         check_value(valid_out, '0', ERROR, "valid_out must be '0' before we handshake out.");
-        pulse_1ns(clk); --from "is_e_processed", to "is_out_ready".
-        ready_out <= '1';
+        pulse_1ns(clk); --from "is_e_processed", to "is_out_ready_final_msg".
         check_value(result, std_logic_vector(to_unsigned(13, result'length)), ERROR, "Result must hold final computed value.");
-        check_value(valid_out, '1', ERROR, "valid_out must be '1' when computation is done.");
-
-        -- Check is_last_msg
-        pulse_1ns(clk); --from "is out ready", to "set_msgout_last".
+        check_value(valid_out, '1', ERROR, "valid_out must be '1' when in handshake out.");
         check_value(msgout_last, '1', ERROR, "msgout_last must be '1' as this was the final handshake out");
 
         --send it back to handshake-inn-state again.
-        pulse_1ns(clk); --from "set_msgout_last", to "is_in_valid".
+        ready_out <= '1';
+        pulse_1ns(clk); --from "is_out_ready_final_msg", to "is_in_valid".
         check_value(msgout_last, '0', ERROR, "msgout_last should be = 0, when in handshake inn again.");
+        check_value(valid_out, '0', ERROR, "valid_out must be '0' when in handshake inn again.");
 
         -- Final reporting
         -- report_msg_id_panel(VOID); -- Prints enabled/disabled log IDs (optional)
