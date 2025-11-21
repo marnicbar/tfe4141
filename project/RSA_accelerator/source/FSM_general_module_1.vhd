@@ -87,9 +87,9 @@ begin
         --main implementation of statemachine
         case (state) is
                 --State 1/11:
-            when is_in_valid => --"when in state "1_in_valid":
+            when is_in_valid =>     --"when in state "is_in_valid":
                 valid_out   <= '0'; --If we got her from handshake out, then stop sending data out.
-                msgout_last <= '0';
+                msgout_last <= '0'; --If we got her from handshake out, then signal we are no longer sending the last msg out.
                 if valid_in = '1' then --if msgin_valid = 1
                     state_next <= initialize; --we go to the next handshake state
                 else
@@ -155,7 +155,7 @@ begin
             when is_e_processed =>
                 e_counter_increment <= '0';
                 Blak_reset_n        <= '1';
-                if (e_counter_end = '1') then --"if we have gone through all the bits of e"
+                if (e_counter_end = '1') then    --"if we have gone through all the bits of e"
                     if(is_last_msg = '1') then   --this will be high if msgin_last was high at hanshake inn.
                         state_next <= is_out_ready_final_msg;
                     else
@@ -174,7 +174,7 @@ begin
                 --State 10/11:
             when is_out_ready_not_final_msg =>
                 valid_out <= '1';
-                msgout_last <= '0';    --this should be redundant, as its = 0 by default. But for clarity.
+                msgout_last <= '0';       --this should be redundant, as its = 0 by default. But for clarity.
                 if (ready_out = '1') then --this means msgout_ready = 1              
                     state_next  <= is_in_valid; --we go to the first state and hanshake inn, again.
                 else
