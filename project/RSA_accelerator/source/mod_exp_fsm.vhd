@@ -87,7 +87,7 @@ begin
         --main implementation of statemachine
         case (state) is
                 --State 1/11:
-            when is_in_valid =>     --"when in state "is_in_valid":
+            when is_in_valid => --"when in state "is_in_valid":
                 valid_out   <= '0'; --If we got her from handshake out, then stop sending data out.
                 msgout_last <= '0'; --If we got her from handshake out, then signal we are no longer sending the last msg out.
                 if valid_in = '1' then --if msgin_valid = 1
@@ -101,7 +101,7 @@ begin
                 ready_in           <= '1'; --msgin_ready = 1
                 is_last_msg_enable <= '1'; --tell the register to hold the value "msgin_last".
                 initialize_regs    <= '1'; -- loads M into P, and '1', into C. Loads key_e into RSR_e. 
-                Blak_reset_n       <= '0';  --reset blak module before use.
+                Blak_reset_n       <= '0'; --reset blak module before use.
                 state_next         <= read_e_bit;
 
                 --State 3/11:
@@ -110,8 +110,8 @@ begin
                 ready_in           <= '0'; -- msgin_ready = 0, so that a new message is not sent to the RSA CORE.
                 initialize_regs    <= '0'; --if prev state was initialize, then we dont want to initialize anymore.
                 RS_enable          <= '0'; --if prev state was rightshift_e, then we now stop right shifting key_e. 
-                Blak_reset_n       <= '1';  --if prev state was initialize, then we stop resetting blak module now.
-                if e_bit = '1' then 
+                Blak_reset_n       <= '1'; --if prev state was initialize, then we stop resetting blak module now.
+                if e_bit = '1' then
                     state_next <= calc_C; --we calculate C.
                 else
                     state_next <= calc_P; --we calculate P.
@@ -155,14 +155,14 @@ begin
             when is_e_processed =>
                 e_counter_increment <= '0';
                 Blak_reset_n        <= '1';
-                if (e_counter_end = '1') then    --"if we have gone through all the bits of e"
-                    if(is_last_msg = '1') then   --this will be high if msgin_last was high at hanshake inn.
+                if (e_counter_end = '1') then --"if we have gone through all the bits of e"
+                    if (is_last_msg = '1') then --this will be high if msgin_last was high at hanshake inn.
                         state_next <= is_out_ready_final_msg;
                     else
                         state_next <= is_out_ready_not_final_msg;
                     end if;
                 else
-                    state_next <= rightshift_e;  --if we have not processed all the bits of e, then we go here.
+                    state_next <= rightshift_e; --if we have not processed all the bits of e, then we go here.
                 end if;
 
                 --State 9/11:
@@ -170,33 +170,27 @@ begin
                 RS_enable  <= '1'; --we rightshift the bits of e
                 state_next <= read_e_bit;
 
-
                 --State 10/11:
             when is_out_ready_not_final_msg =>
-                valid_out <= '1';
-                msgout_last <= '0';       --this should be redundant, as its = 0 by default. But for clarity.
+                valid_out   <= '1';
+                msgout_last <= '0'; --this should be redundant, as its = 0 by default. But for clarity.
                 if (ready_out = '1') then --this means msgout_ready = 1              
-                    state_next  <= is_in_valid; --we go to the first state and hanshake inn, again.
+                    state_next <= is_in_valid; --we go to the first state and hanshake inn, again.
                 else
                     state_next <= is_out_ready_not_final_msg; --wait for handshake out.
                 end if;
 
                 --State 11/11:
             when is_out_ready_final_msg =>
-                valid_out <= '1';
-                msgout_last <= '1'; 
+                valid_out   <= '1';
+                msgout_last <= '1';
                 if (ready_out = '1') then --this means msgout_ready = 1              
-                    state_next  <= is_in_valid; --we go to the first state and hanshake inn, again.
+                    state_next <= is_in_valid; --we go to the first state and hanshake inn, again.
                 else
                     state_next <= is_out_ready_final_msg; --wait for handshake out.
                 end if;
 
-            
-
-
-
- 
-            -- this is a default condition, to reset if we end up in an undefined state.
+                -- this is a default condition, to reset if we end up in an undefined state.
 
             when others =>
                 initialize_regs     <= '0';

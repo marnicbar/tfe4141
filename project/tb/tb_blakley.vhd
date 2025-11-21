@@ -21,26 +21,26 @@ architecture sim of tb_blakley is
     signal reset_n  : std_logic := '0';
     signal b_enable : std_logic := '0';
 
-    signal A, B, N     : std_logic_vector(W-1 downto 0);
-    signal result_out  : std_logic_vector(W-1 downto 0);
-    signal done_out    : std_logic;
+    signal A, B, N    : std_logic_vector(W - 1 downto 0);
+    signal result_out : std_logic_vector(W - 1 downto 0);
+    signal done_out   : std_logic;
 
     ------------------------------------------------------------
     -- DEBUG FROM TOP-LEVEL
     ------------------------------------------------------------
-    signal dbg_state     : std_logic_vector(2 downto 0);
-    signal dbg_reg_temp  : unsigned(TMP_BITS-1 downto 0);
-    signal dbg_reg_a     : unsigned(W-1 downto 0);
-    signal dbg_reg_b     : unsigned(W-1 downto 0);
-    signal dbg_reg_n     : unsigned(W-1 downto 0);
-    signal dbg_counter   : unsigned(CNT_W-1 downto 0);
-    signal dbg_A_bit     : std_logic;
+    signal dbg_state    : std_logic_vector(2 downto 0);
+    signal dbg_reg_temp : unsigned(TMP_BITS - 1 downto 0);
+    signal dbg_reg_a    : unsigned(W - 1 downto 0);
+    signal dbg_reg_b    : unsigned(W - 1 downto 0);
+    signal dbg_reg_n    : unsigned(W - 1 downto 0);
+    signal dbg_counter  : unsigned(CNT_W - 1 downto 0);
+    signal dbg_A_bit    : std_logic;
 
     ------------------------------------------------------------
     -- Expected result (NOW std_logic_vector)
     ------------------------------------------------------------
-    constant EXPECTED_RES : std_logic_vector(W-1 downto 0) :=
-        x"48FF651515CC31E26435A962E514F83284B30565D44494AF9778FAEA134346E9";
+    constant EXPECTED_RES : std_logic_vector(W - 1 downto 0) :=
+                                                               x"48FF651515CC31E26435A962E514F83284B30565D44494AF9778FAEA134346E9";
 
 begin
 
@@ -53,43 +53,43 @@ begin
     -- DUT INSTANCE
     ------------------------------------------------------------
     UUT : entity work.blakley
-        generic map (
+        generic map(
             W        => W,
             TMP_BITS => TMP_BITS,
             CNT_W    => CNT_W
         )
         port map(
-            clk         => clk,
-            reset_n     => reset_n,
-            b_enable    => b_enable,
-            A           => A,
-            B           => B,
-            N           => N,
-            result_out  => result_out,
-            done_out    => done_out,
+            clk        => clk,
+            reset_n    => reset_n,
+            b_enable   => b_enable,
+            A          => A,
+            B          => B,
+            N          => N,
+            result_out => result_out,
+            done_out   => done_out,
 
-            debug_state     => dbg_state,
-            debug_reg_temp  => dbg_reg_temp,
-            debug_reg_a     => dbg_reg_a,
-            debug_reg_b     => dbg_reg_b,
-            debug_reg_n     => dbg_reg_n,
-            debug_counter   => dbg_counter,
-            debug_A_bit     => dbg_A_bit
+            debug_state    => dbg_state,
+            debug_reg_temp => dbg_reg_temp,
+            debug_reg_a    => dbg_reg_a,
+            debug_reg_b    => dbg_reg_b,
+            debug_reg_n    => dbg_reg_n,
+            debug_counter  => dbg_counter,
+            debug_A_bit    => dbg_A_bit
         );
 
     ------------------------------------------------------------
     -- LOGGING PROCESS
     ------------------------------------------------------------
-    log_proc : process(clk)
+    log_proc : process (clk)
     begin
         if rising_edge(clk) then
             log(ID_SEQUENCER,
-                "STATE= " & to_hstring(dbg_state) &
-                "  count=" & integer'image(to_integer(dbg_counter)) &
-                "  A_bit=" & std_logic'image(dbg_A_bit));
+            "STATE= " & to_hstring(dbg_state) &
+            "  count=" & integer'image(to_integer(dbg_counter)) &
+            "  A_bit=" & std_logic'image(dbg_A_bit));
 
             log(ID_SEQUENCER,
-                "TEMP= x" & to_hstring(dbg_reg_temp));
+            "TEMP= x" & to_hstring(dbg_reg_temp));
         end if;
     end process;
 
@@ -138,14 +138,14 @@ begin
         -- UVVM CHECK (convert SLV to UNSIGNED)
         --------------------------------------------------------
         check_value(
-            unsigned(result_out),
-            unsigned(EXPECTED_RES),
-            ERROR,
-            "Blakley top-level result mismatch!"
+        unsigned(result_out),
+        unsigned(EXPECTED_RES),
+        ERROR,
+        "Blakley top-level result mismatch!"
         );
 
         log(ID_LOG_HDR,
-            "TEST PASSED: Hardware matches Blakley golden model");
+        "TEST PASSED: Hardware matches Blakley golden model");
 
         std.env.stop;
         wait;

@@ -130,7 +130,7 @@ begin
         wait for 1 ns;
         check_value(P_reg, (P_reg'range => '0'), ERROR, "P_reg shall hold value zero after/during reset.");
         check_value(C_reg, std_logic_vector(to_unsigned(1, C_reg'length)), ERROR, "C_reg shall be initialized to 1 during reset.");
-        check_value(RSR_e, (RSR_e'range => '0'), ERROR, "RSR_e shall hold value zero after/during reset");
+        check_value(RSR_e, (RSR_e'range                 => '0'), ERROR, "RSR_e shall hold value zero after/during reset");
         check_value(e_bit_counter, (e_bit_counter'range => '0'), ERROR, "e_bit_counter shall be zero during reset.");
         check_value(e_counter_end, '0', ERROR, "e_counter_end shall be '0' during reset.");
         check_value(is_last_msg, '0', ERROR, "is_last_msg shall be '0' during reset.");
@@ -138,12 +138,12 @@ begin
         -- TODO: Are there more signals that need to be checked?
 
         -- Load test values
-        reset_n  <= '1';
-        valid_in <= '1';
+        reset_n    <= '1';
+        valid_in   <= '1';
         msgin_last <= '1'; -- Indicate that this is the last message
-        message  <= std_logic_vector(to_unsigned(7, message'length));
-        key      <= std_logic_vector(to_unsigned(3, key'length)); -- Exponent 
-        modulus  <= std_logic_vector(to_unsigned(55, modulus'length));
+        message    <= std_logic_vector(to_unsigned(7, message'length));
+        key        <= std_logic_vector(to_unsigned(3, key'length)); -- Exponent 
+        modulus    <= std_logic_vector(to_unsigned(55, modulus'length));
 
         -- First clock to set initialize_regs
         pulse_1ns(clk);
@@ -186,15 +186,13 @@ begin
         pulse_1ns(clk);
         check_value(P_reg, std_logic_vector(to_unsigned(49, C_reg'length)), ERROR, "P_reg must hold correct value after calculating C.");
         check_value(C_reg, std_logic_vector(to_unsigned(7, C_reg'length)), ERROR, "C_reg must hold previous value after calculating P.");
-        
 
         -- Increment e counter
         Blak_finished <= '0';
         check_value(e_counter_increment, '1', ERROR, "e_counter_increment must be '1' after C and then P have been updated.");
-        pulse_1ns(clk);   --this clock makes e_bit_counter increment from 0 to 1.
+        pulse_1ns(clk); --this clock makes e_bit_counter increment from 0 to 1.
         check_value(e_bit_counter, std_logic_vector(to_unsigned(1, e_bit_counter'length)), ERROR, "e_bit_counter must be incremented after processing one bit.");
         check_value(e_counter_end, '0', ERROR, "e_counter_end must be '0' having updated e_bit_counter.");
-        
 
         -- Rightshift e
         pulse_1ns(clk); --this clock switches from "is_e_processed state", to "rightshift_e state".
@@ -215,7 +213,7 @@ begin
         -- Simulate Blakley module finishing calculation
         Blak_C        <= std_logic_vector(to_unsigned(13, Blak_C'length)); -- 49 * 7 mod 55 = 13
         Blak_finished <= '1';
-        pulse_1ns(clk);  --this clock switches from "calc_C", to "reset_blak_module".
+        pulse_1ns(clk); --this clock switches from "calc_C", to "reset_blak_module".
         check_value(P_reg, std_logic_vector(to_unsigned(49, P_reg'length)), ERROR, "P_reg must hold previous value when calculating C.");
         check_value(C_reg, std_logic_vector(to_unsigned(13, C_reg'length)), ERROR, "C_reg must hold correct value after calculating C.");
 
@@ -231,7 +229,6 @@ begin
         pulse_1ns(clk); --from "calc_p", to "increment_e".
         check_value(P_reg, std_logic_vector(to_unsigned(36, C_reg'length)), ERROR, "P_reg must hold result of multiplication.");
         check_value(C_reg, std_logic_vector(to_unsigned(13, C_reg'length)), ERROR, "C_reg must hold previous value.");
-        
 
         -- Increment e counter
         Blak_finished <= '0';
@@ -239,13 +236,10 @@ begin
         check_value(e_bit_counter, std_logic_vector(to_unsigned(2, e_bit_counter'length)), ERROR, "e_bit_counter must be incremented after processing one bit.");
         check_value(e_counter_end, '0', ERROR, "e_counter_end must be '0' after processing second bit.");
 
-
-
         -- Rightshift e
         pulse_1ns(clk); --from "is_e_processed" to "rightshift_e".
         pulse_1ns(clk); --from "rightshift_e" to "read_e_bit".
         check_value(e_bit, '0', ERROR, "e_bit should be the first 0, when reading from LSB (1, 1, 0 <-this one, 0, 0...)");
-
 
         -- Calc P (since e_bit = 0, we skip calc C)
         pulse_1ns(clk); -- from "read_e_bit", to "calk_P".
@@ -258,7 +252,6 @@ begin
         pulse_1ns(clk); --from "calc_P" to "increment_e".
         check_value(P_reg, std_logic_vector(to_unsigned(31, C_reg'length)), ERROR, "P_reg must hold result of multiplication.");
         check_value(C_reg, std_logic_vector(to_unsigned(13, C_reg'length)), ERROR, "C_reg must hold previous value.");
-        
 
         -- Increment e counter
         Blak_finished <= '0';
@@ -267,7 +260,7 @@ begin
         check_value(e_bit_counter, std_logic_vector(to_unsigned(3, e_bit_counter'length)), ERROR, "e_bit_counter must be incremented after processing one bit.");
         check_value(e_counter_end, '0', ERROR, "e_counter_end must be '0' after processing third bit.");
 
--------------eg er her nå.------------------------------
+        -------------eg er her nå.------------------------------
 
         -------------------------------------------------
         -- Now three bits of exponent have been processed.
@@ -279,7 +272,7 @@ begin
         wait_clocks_until(clk, e_counter_end); --runs the clock, until we are in "is_e_processed"-state.
         check_value(state_type'pos(dbg_state), state_type'pos(is_e_processed), ERROR, "State must be 'is_e_processed'");
         check_value(e_counter_end, '1', ERROR, "e_counter_end must be '1' after processing all bits.");
-        
+
         check_value(valid_out, '0', ERROR, "valid_out must be '0' before we handshake out.");
 
         -- go to handshake out.

@@ -3,9 +3,9 @@ use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 
 entity blakley_controller is
-    port(
-        clk     : in std_logic;
-        rst_n   : in std_logic;  -- active low
+    port (
+        clk   : in std_logic;
+        rst_n : in std_logic; -- active low
 
         b_enable : in std_logic; -- starts the Blakley computation
 
@@ -13,13 +13,13 @@ entity blakley_controller is
         temp_in_bounds : in std_logic; -- podemos apagar
 
         ----------------------------Control signals----------------------
-        read_inputs  : out std_logic;
-        process_bit  : out std_logic;
-        comp_sub_1   : out std_logic;
-        comp_sub_2   : out std_logic;
-        output_en    : out std_logic;
+        read_inputs : out std_logic;
+        process_bit : out std_logic;
+        comp_sub_1  : out std_logic;
+        comp_sub_2  : out std_logic;
+        output_en   : out std_logic;
         -----------------------------------------------------------------
-        done         : out std_logic
+        done : out std_logic
     );
 end blakley_controller;
 
@@ -28,14 +28,14 @@ architecture fsm of blakley_controller is
     type state_type is (INPUT, PROCESS_S, OUTPUT_S);
 
     signal state    : state_type := INPUT;
-    signal done_reg : std_logic := '0';
+    signal done_reg : std_logic  := '0';
 
 begin
 
     --------------------------------------------------------------------
     -- FSM
     --------------------------------------------------------------------
-    BLAK_FSM : process(clk, rst_n)
+    BLAK_FSM : process (clk, rst_n)
     begin
         if rst_n = '0' then
             state    <= INPUT;
@@ -73,14 +73,17 @@ begin
     --------------------------------------------------------------------
     -- CONTROL SIGNALS
     --------------------------------------------------------------------
-    read_inputs <= '1' when state = INPUT   else '0';
-    process_bit <= '1' when state = PROCESS_S else '0';
+    read_inputs <= '1' when state = INPUT else
+                   '0';
+    process_bit <= '1' when state = PROCESS_S else
+                   '0';
 
     -- No external subtract control anymore – handled inside datapath
-    comp_sub_1  <= '0';
-    comp_sub_2  <= '0';
+    comp_sub_1 <= '0';
+    comp_sub_2 <= '0';
 
-    output_en   <= '1' when state = OUTPUT_S else '0';
-    done        <= done_reg;
+    output_en <= '1' when state = OUTPUT_S else
+                 '0';
+    done <= done_reg;
 
 end architecture;

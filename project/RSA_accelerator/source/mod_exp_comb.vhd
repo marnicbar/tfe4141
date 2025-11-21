@@ -140,15 +140,15 @@ begin
     -- ***************************************************************************
     -- Get output from Blakley-module, and put the result in reg P or reg C:
     -- ***************************************************************************
-    process(clk, reset_n) begin
-        if reset_n = '0' then                -- Asynchronous reset 
-            P_reg <= (others => '0');
-            C_reg <= (others => '0');
-            C_reg(0) <= '1';                 --C = [000...001]
-        elsif rising_edge(clk) then          --combinatorial is synchronous to avoid latches
+    process (clk, reset_n) begin
+        if reset_n = '0' then -- Asynchronous reset 
+            P_reg    <= (others => '0');
+            C_reg    <= (others => '0');
+            C_reg(0) <= '1'; --C = [000...001]
+        elsif rising_edge(clk) then --combinatorial is synchronous to avoid latches
             if initialize_regs = '1' then
-                P_reg <= message;            --P = message M.
-                C_reg <= (others => '0');
+                P_reg    <= message; --P = message M.
+                C_reg    <= (others => '0');
                 C_reg(0) <= '1';
             elsif Blak_finished = '1' then
                 if pc_select = '0' then
@@ -162,11 +162,10 @@ begin
 
     result <= C_reg; --result = msg_out.
 
-
     -- ***************************************************************************
     -- Send inputs to Blakley module
     -- ***************************************************************************
-     
+
     process (P_reg, C_reg, modulus, pc_select) begin
         if (pc_select = '0') then
             Blak_B <= P_reg;
@@ -180,7 +179,7 @@ begin
     -- ***************************************************************************
     -- clk for blakley module:
     -- ***************************************************************************
-        Blak_clk <= clk;
+    Blak_clk <= clk;
 
     -- ***************************************************************************
     -- RSR_e and sending the e_bit to the FSM.
@@ -188,18 +187,16 @@ begin
     process (reset_n, clk) begin
         if (reset_n = '0') then
             RSR_e <= (others => '0');
-        elsif(rising_edge(clk)) then 
-            if(initialize_regs = '1') then
-                RSR_e <= key;      -------------WARNING: this assumes key`s LSB is also in index 0 on the righthand side of the register.     
+        elsif (rising_edge(clk)) then
+            if (initialize_regs = '1') then
+                RSR_e <= key; -------------WARNING: this assumes key`s LSB is also in index 0 on the righthand side of the register.     
             elsif (RS_enable = '1') then
                 RSR_e <= std_logic_vector(shift_right(unsigned(RSR_e), 1)); -- shift right by 1 bits, since LSB is on the righthand side.
             end if;
         end if;
     end process;
 
- 
     e_bit <= RSR_e(0); --sends the LSB of RSR_e, to the FSM. LSB is on the righthand side of RSR_e.
-
 
     -- ***************************************************************************
     -- e_bit_counter, tells the FSM when we have processed all 256 bits of e.
@@ -208,23 +205,20 @@ begin
         if (reset_n = '0') then
             e_bit_counter <= (others => '0'); --fills vector with zero`s.
             e_counter_end <= '0';
-        elsif(rising_edge(clk)) then
-            if(initialize_regs = '1') then
+        elsif (rising_edge(clk)) then
+            if (initialize_regs = '1') then
                 e_bit_counter <= (others => '0'); --fills vector with zero`s.
-                e_counter_end <= '0'; 
+                e_counter_end <= '0';
             elsif (e_counter_increment = '1') then
                 e_bit_counter <= std_logic_vector(unsigned(e_bit_counter) + 1);
             end if;
-            if (e_counter_increment = '1' and unsigned(e_bit_counter) = 254 ) then --this condition means we have processed all bits of e.
+            if (e_counter_increment = '1' and unsigned(e_bit_counter) = 254) then --this condition means we have processed all bits of e.
                 e_counter_end <= '1';
             else
                 e_counter_end <= '0';
             end if;
         end if;
     end process;
-
-
-
 
     -- ***************************************************************************
     -- is_last_msg. Being told to record the msgin_last-signal.
@@ -233,12 +227,11 @@ begin
         if (reset_n = '0') then
             is_last_msg <= '0';
         elsif (rising_edge(clk)) then
-            if(is_last_msg_enable = '1') then
+            if (is_last_msg_enable = '1') then
                 is_last_msg <= msgin_last;
             end if;
         end if;
     end process;
-    
 
     -- Only for use in testbenches and debugging:
     -- pragma translate_off
