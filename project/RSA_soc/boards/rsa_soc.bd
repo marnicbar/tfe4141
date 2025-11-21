@@ -235,7 +235,7 @@
             "vlnv": "xilinx.com:user:RSA_accelerator:1.0",
             "ip_revision": "2",
             "xci_name": "rsa_soc_rsa_acc_0",
-            "xci_path": "ip\\rsa_soc_rsa_acc_0\\rsa_soc_rsa_acc_0.xci",
+            "xci_path": "ip/rsa_soc_rsa_acc_0/rsa_soc_rsa_acc_0.xci",
             "inst_hier_path": "rsa/rsa_acc",
             "interface_ports": {
               "s00_axi": {
@@ -249,7 +249,7 @@
             "vlnv": "xilinx.com:ip:axi_dma:7.1",
             "ip_revision": "32",
             "xci_name": "rsa_soc_rsa_dma_0",
-            "xci_path": "ip\\rsa_soc_rsa_dma_0\\rsa_soc_rsa_dma_0.xci",
+            "xci_path": "ip/rsa_soc_rsa_dma_0/rsa_soc_rsa_dma_0.xci",
             "inst_hier_path": "rsa/rsa_dma",
             "parameters": {
               "c_include_sg": {
@@ -366,7 +366,7 @@
         "vlnv": "xilinx.com:ip:processing_system7:5.5",
         "ip_revision": "6",
         "xci_name": "rsa_soc_processing_system7_0_0",
-        "xci_path": "ip\\rsa_soc_processing_system7_0_0\\rsa_soc_processing_system7_0_0.xci",
+        "xci_path": "ip/rsa_soc_processing_system7_0_0/rsa_soc_processing_system7_0_0.xci",
         "inst_hier_path": "processing_system7_0",
         "parameters": {
           "PCW_ACT_APU_PERIPHERAL_FREQMHZ": {
@@ -1623,15 +1623,6 @@
           "PCW_S_AXI_HP0_ID_WIDTH": {
             "value": "6"
           },
-          "PCW_S_AXI_HP1_DATA_WIDTH": {
-            "value": "64"
-          },
-          "PCW_S_AXI_HP2_DATA_WIDTH": {
-            "value": "64"
-          },
-          "PCW_S_AXI_HP3_DATA_WIDTH": {
-            "value": "64"
-          },
           "PCW_TPIU_PERIPHERAL_CLKSRC": {
             "value": "External"
           },
@@ -2157,14 +2148,14 @@
         "vlnv": "xilinx.com:ip:proc_sys_reset:5.0",
         "ip_revision": "15",
         "xci_name": "rsa_soc_rst_ps7_0_100M_0",
-        "xci_path": "ip\\rsa_soc_rst_ps7_0_100M_0\\rsa_soc_rst_ps7_0_100M_0.xci",
+        "xci_path": "ip/rsa_soc_rst_ps7_0_100M_0/rsa_soc_rst_ps7_0_100M_0.xci",
         "inst_hier_path": "rst_ps7_0_100M"
       },
       "axi_smc": {
         "vlnv": "xilinx.com:ip:smartconnect:1.0",
         "ip_revision": "23",
         "xci_name": "rsa_soc_axi_smc_0",
-        "xci_path": "ip\\rsa_soc_axi_smc_0\\rsa_soc_axi_smc_0.xci",
+        "xci_path": "ip/rsa_soc_axi_smc_0/rsa_soc_axi_smc_0.xci",
         "inst_hier_path": "axi_smc",
         "parameters": {
           "NUM_SI": {
@@ -2239,7 +2230,7 @@
       },
       "ps7_0_axi_periph": {
         "vlnv": "xilinx.com:ip:axi_interconnect:2.1",
-        "xci_path": "ip\\rsa_soc_ps7_0_axi_periph_0\\rsa_soc_ps7_0_axi_periph_0.xci",
+        "xci_path": "ip/rsa_soc_ps7_0_axi_periph_0/rsa_soc_ps7_0_axi_periph_0.xci",
         "inst_hier_path": "ps7_0_axi_periph",
         "xci_name": "rsa_soc_ps7_0_axi_periph_0",
         "parameters": {
@@ -2332,7 +2323,7 @@
             "vlnv": "xilinx.com:ip:axi_crossbar:2.1",
             "ip_revision": "32",
             "xci_name": "rsa_soc_xbar_0",
-            "xci_path": "ip\\rsa_soc_xbar_0\\rsa_soc_xbar_0.xci",
+            "xci_path": "ip/rsa_soc_xbar_0/rsa_soc_xbar_0.xci",
             "inst_hier_path": "ps7_0_axi_periph/xbar",
             "parameters": {
               "NUM_MI": {
@@ -2408,7 +2399,7 @@
                 "vlnv": "xilinx.com:ip:axi_protocol_converter:2.1",
                 "ip_revision": "31",
                 "xci_name": "rsa_soc_auto_pc_0",
-                "xci_path": "ip\\rsa_soc_auto_pc_0\\rsa_soc_auto_pc_0.xci",
+                "xci_path": "ip/rsa_soc_auto_pc_0/rsa_soc_auto_pc_0.xci",
                 "inst_hier_path": "ps7_0_axi_periph/s00_couplers/auto_pc",
                 "parameters": {
                   "MI_PROTOCOL": {

@@ -28,6 +28,11 @@ use work.mod_exp_pkg.all; -- bring in the enum type
 
 entity controller is
     port (
+        -- debug
+        -- pragma translate_off
+        dbg_state : out state_type;
+        -- pragma translate_on
+
         --misc
         clk     : in std_logic;
         reset_n : in std_logic;
@@ -55,12 +60,7 @@ entity controller is
         Blak_finished       : in  std_logic; --signal that Blakley module is finished.
         is_last_msg_enable  : out std_logic;
         is_last_msg         : in  std_logic;
-        pc_select           : out std_logic; -- Signal for which of P or C that are using the blakley module:
-
-        -- debug
-        -- pragma translate_off
-        dbg_state : out state_type
-        -- pragma translate_on
+        pc_select           : out std_logic -- Signal for which of P or C that are using the blakley module:
     );
 end controller;
 

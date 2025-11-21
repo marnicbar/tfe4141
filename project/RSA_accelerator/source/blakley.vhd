@@ -75,6 +75,16 @@ begin
             CNT_W    => CNT_W
         )
         port map(
+            -- For debugging/testing purposes
+            -- pragma translate_off
+            dbg_reg_temp => debug_reg_temp,
+            dbg_reg_a    => debug_reg_a,
+            dbg_reg_b    => debug_reg_b,
+            dbg_reg_n    => debug_reg_n,
+            dbg_counter  => debug_counter,
+            dbg_A_bit    => debug_A_bit,
+            -- pragma translate_on
+
             clk     => clk,
             reset_n => reset_n,
 
@@ -91,14 +101,7 @@ begin
             B => B_u,
             N => N_u,
 
-            result => result_u,
-
-            dbg_reg_temp => debug_reg_temp,
-            dbg_reg_a    => debug_reg_a,
-            dbg_reg_b    => debug_reg_b,
-            dbg_reg_n    => debug_reg_n,
-            dbg_counter  => debug_counter,
-            dbg_A_bit    => debug_A_bit
+            result => result_u
         );
 
     --------------------------------------------------------------------
@@ -145,6 +148,7 @@ begin
         end if;
     end process;
 
+    -- pragma translate_off
     debug_state <= std_logic_vector(to_unsigned(state_type'pos(fsm_state), 3));
-
+    -- pragma translate_on
 end architecture;
