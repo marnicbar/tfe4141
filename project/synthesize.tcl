@@ -1,4 +1,4 @@
-
+set origin_dir "."
 set start_time [clock clicks -milliseconds]
 cd [file dirname [file normalize [info script]]]
 
@@ -8,7 +8,7 @@ source -notrace [file normalize "$origin_dir/procedures.tcl"]
 #close_project
 safe_close_project
 
-set origin_dir "."
+
 source -notrace [file normalize "${origin_dir}/generate_IP.tcl"]
 cd [file dirname [file normalize [info script]]]
 
@@ -21,10 +21,10 @@ reset_project
 #to force the project to acknowledge all the ips
 open_bd_design [list [file normalize "${origin_dir}/RSA_soc/boards/rsa_soc.bd"]]
 
-close_bd_design [get_bd_designs rsa_soc]
 update_compile_order -fileset sources_1
 
 
+close_bd_design [get_bd_designs rsa_soc]
 report_ip_status -name ip_status
 upgrade_ip -vlnv xilinx.com:user:rsa_accelerator:1.0 [get_ips  rsa_soc_rsa_acc_0] -log ip_upgrade.log
 update_compile_order -fileset sources_1

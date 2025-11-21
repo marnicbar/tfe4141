@@ -20,12 +20,8 @@ entity rsa_core is
         msgout_ready : in  std_logic;
         msgout_data  : out std_logic_vector(C_BLOCK_SIZE-1 downto 0);
         msgout_last  : out std_logic;
-
-        key_e_d     : in std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-        key_n       : in std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-        rsa_status  : out std_logic_vector(31 downto 0);
-
-        -------------------------------------------------------------------------
+        
+            -------------------------------------------------------------------------
         -- FULL DEBUG VISIBILITY yupi :)
         -------------------------------------------------------------------------
         -- pragma translate_off
@@ -36,8 +32,14 @@ entity rsa_core is
         dbg_b         : out unsigned(C_BLOCK_SIZE-1 downto 0);
         dbg_n         : out unsigned(C_BLOCK_SIZE-1 downto 0);
         dbg_cnt       : out unsigned(8 downto 0);
-        dbg_bit       : out std_logic
+        dbg_bit       : out std_logic;
         -- pragma translate_on
+
+        key_e_d     : in std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+        key_n       : in std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+        rsa_status  : out std_logic_vector(31 downto 0)
+
+    
     );
 end rsa_core;
 
@@ -100,14 +102,16 @@ begin
             Blak_B        => Blak_B_s,
             Blak_C        => Blak_C_s,
             Blak_n        => Blak_n_s,
-
-            clk     => clk,
-            reset_n => reset_n,
-
+            
             -- exponentiation FSM debug
             -- pragma translate_off
-            dbg_state => dbg_state_exp_s
+            dbg_state => dbg_state_exp_s,
             -- pragma translate_on
+            
+            clk     => clk,
+            reset_n => reset_n
+
+            
         );
 
     -------------------------------------------------------------------------
@@ -127,19 +131,21 @@ begin
             A => Blak_A_s,
             B => Blak_B_s,
             N => Blak_n_s,
-
-            result_out => Blak_C_s,
-            done_out   => Blak_finished_s,
-
-            -- pragma translate_off
+            
+             -- pragma translate_off
             debug_state    => dbg_state_bla_s,
             debug_reg_temp => dbg_temp_s,
             debug_reg_a    => dbg_a_s,
             debug_reg_b    => dbg_b_s,
             debug_reg_n    => dbg_n_s,
             debug_counter  => dbg_cnt_s,
-            debug_A_bit    => dbg_bit_s
+            debug_A_bit    => dbg_bit_s,
             -- pragma translate_on
+
+            result_out => Blak_C_s,
+            done_out   => Blak_finished_s
+
+           
         );
 
     -------------------------------------------------------------------------
