@@ -59,16 +59,16 @@ architecture sim of tb_combined is
     ---------------------------------------------------
     -- Internal signals for debugging/testing purposes:
     ---------------------------------------------------
-    signal LSR_e               : std_logic_vector(C_block_size - 1 downto 0); --Left shift register for key_e
+    signal RSR_e               : std_logic_vector(C_block_size - 1 downto 0); --Right shift register for key_e
     signal P_reg               : std_logic_vector(C_block_size - 1 downto 0); --register for value P
     signal C_reg               : std_logic_vector(C_block_size - 1 downto 0); --register for value C
     signal pc_select           : std_logic; -- Signal to select which of P or C that are "using" the blakley module.
     signal e_bit_counter       : std_logic_vector(counter_bit_size - 1 downto 0); --8 bit signal for a counter which the state machine uses to iterate over 256 bits of key_e.
     signal e_counter_increment : std_logic; --tells e_counter to += 1.
     signal e_counter_end       : std_logic; --tells FSM that we have processed all 256 bits of e.
-    signal LS_enable           : std_logic; --signal which left shifts register LSR_e
-    signal e_bit               : std_logic; --the LSB of register LSR_e
-    signal initialize_regs     : std_logic; --loads initial values into C, P, LSR_e and e_counter
+    signal RS_enable           : std_logic; --signal which right shifts register RSR_e
+    signal e_bit               : std_logic; --the LSB of register RSR_e
+    signal initialize_regs     : std_logic; --loads initial values into C, P, RSR_e and e_counter
     signal is_last_msg_enable  : std_logic; --signal which tells "is_last_msg" to record the "msgin_last" signal.
     signal is_last_msg         : std_logic; --register which = 1, if msgin_last has been high.
 
@@ -101,14 +101,14 @@ begin
             reset_n => reset_n,
 
             -- Debug signals
-            dbg_LSR_e               => LSR_e,
+            dbg_RSR_e               => RSR_e,
             dbg_P_reg               => P_reg,
             dbg_C_reg               => C_reg,
             dbg_pc_select           => pc_select,
             dbg_e_bit_counter       => e_bit_counter,
             dbg_e_counter_increment => e_counter_increment,
             dbg_e_counter_end       => e_counter_end,
-            dbg_LS_enable           => LS_enable,
+            dbg_RS_enable           => RS_enable,
             dbg_e_bit               => e_bit,
             dbg_initialize_regs     => initialize_regs,
             dbg_is_last_msg_enable  => is_last_msg_enable,
@@ -145,7 +145,7 @@ begin
         wait for 1 ns;
         check_value(P_reg, (P_reg'range => '0'), ERROR, "P_reg shall hold value zero after/during reset.");
         check_value(C_reg, std_logic_vector(to_unsigned(1, C_reg'length)), ERROR, "C_reg shall be initialized to 1 during reset.");
-        check_value(LSR_e, (LSR_e'range                 => '0'), ERROR, "LSR_e shall hold value zero after/during reset");
+        check_value(RSR_e, (RSR_e'range                 => '0'), ERROR, "RSR_e shall hold value zero after/during reset");
         check_value(e_bit_counter, (e_bit_counter'range => '0'), ERROR, "e_bit_counter shall be zero during reset.");
         check_value(e_counter_end, '0', ERROR, "e_counter_end shall be '0' during reset.");
         check_value(is_last_msg, '0', ERROR, "is_last_msg shall be '0' during reset.");
@@ -166,11 +166,11 @@ begin
 
         -- check values in registers, after they have been initialized:
         pulse_1ns(clk);
-        check_value(LSR_e, key, ERROR, "LSR_e shall be loaded with key after valid_in pulse.");
+        check_value(RSR_e, key, ERROR, "RSR_e shall be loaded with key after valid_in pulse.");
         check_value(P_reg, message, ERROR, "P_reg shall be loaded with message after valid_in pulse.");
         check_value(C_reg, std_logic_vector(to_unsigned(1, C_reg'length)), ERROR, "C_reg shall be initialized to 1 after valid_in pulse.");
         check_value(e_bit_counter, (e_bit_counter'range => '0'), ERROR, "e_bit_counter shall be zero after valid_in pulse.");
-        check_value(e_bit, '1', ERROR, "e_bit shall be LSB of LSR_e after first shift.");
+        check_value(e_bit, '1', ERROR, "e_bit shall be LSB of RSR_e after first shift.");
 
         -- Calc C
         pulse_1ns(clk);
@@ -211,14 +211,14 @@ begin
         check_value(e_bit_counter, std_logic_vector(to_unsigned(1, e_bit_counter'length)), ERROR, "e_bit_counter must be incremented after processing one bit.");
         check_value(e_counter_end, '0', ERROR, "e_counter_end must be '0' having updated e_bit_counter.");
 
-        -- Leftshift e
-        pulse_1ns(clk); --this clock switches from "is_e_processed state", to "leftshift_e state".
+        -- rightshift e
+        pulse_1ns(clk); --this clock switches from "is_e_processed state", to "rightshift_e state".
         check_value(e_counter_increment, '0', ERROR, "e_counter_increment must be '0' after it has incremented once.");
 
         -- read_e_bit
-        pulse_1ns(clk); --this clock switches from "leftshift_e"-state to "read_e_bit"-state
+        pulse_1ns(clk); --this clock switches from "rightshift_e"-state to "read_e_bit"-state
         -- the e_bit should still be = 1 here. We are reading the second 1-bit in the key here.
-        check_value(e_bit, '1', ERROR, "e_bit must be updated to new LSB of LSR_e after shift.");
+        check_value(e_bit, '1', ERROR, "e_bit must be updated to new LSB of RSR_e after shift.");
 
         -- Calc C
         pulse_1ns(clk); -- Go from "read_e_bit"-state, to state "calc_C"
@@ -253,9 +253,9 @@ begin
         check_value(e_bit_counter, std_logic_vector(to_unsigned(2, e_bit_counter'length)), ERROR, "e_bit_counter must be incremented after processing one bit.");
         check_value(e_counter_end, '0', ERROR, "e_counter_end must be '0' after processing second bit.");
 
-        -- Leftshift e
-        pulse_1ns(clk); --from "is_e_processed" to "leftshift_e".
-        pulse_1ns(clk); --from "leftshift_e" to "read_e_bit".
+        -- rightshift e
+        pulse_1ns(clk); --from "is_e_processed" to "rightshift_e".
+        pulse_1ns(clk); --from "rightshift_e" to "read_e_bit".
         check_value(e_bit, '0', ERROR, "e_bit should be the first 0, when reading from LSB (1, 1, 0 <-this one, 0, 0...)");
 
         -- Calc P (since e_bit = 0, we skip calc C)

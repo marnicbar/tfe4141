@@ -11,7 +11,7 @@ package mod_exp_pkg is
         --states associated with handshake data inn
         is_in_valid, initialize, read_e_bit,
         --states associated with P = P*P mod n,  and C = C*P mod n.
-        calc_C, reset_blak_module, calc_P, increment_e, is_e_processed, Leftshift_e,
+        calc_C, reset_blak_module, calc_P, increment_e, is_e_processed, rightshift_e,
         --states associated with handshake data out
         is_out_ready_not_final_msg, is_out_ready_final_msg
     );
@@ -51,11 +51,11 @@ entity controller is
         Blak_reset_n : out std_logic; --blakley module reset sign. must be reset after each computation. 
 
         --controll signals inside the RSA-core
-        e_bit               : in  std_logic; --the LSB of register LSR_e
-        LS_enable           : out std_logic; --signal which left shift key_e
+        e_bit               : in  std_logic; --the LSB of register RSR_e
+        RS_enable           : out std_logic; --signal which right shift key_e
         e_counter_end       : in  std_logic; --tells the FSM when counter >= 255
         e_counter_increment : out std_logic; --tells the FSM when counter >= 255
-        initialize_regs     : out std_logic; --loads initial values into C, P, LSR_e and e_counter
+        initialize_regs     : out std_logic; --loads initial values into C, P, RSR_e and e_counter
         Blak_enable         : out std_logic; --signal that tells Blakley module to start computation.
         Blak_finished       : in  std_logic; --signal that Blakley module is finished.
         is_last_msg_enable  : out std_logic;
@@ -82,7 +82,7 @@ begin
         pc_select           <= '0';
         Blak_enable         <= '0';
         Blak_reset_n        <= '1'; --reset for blakley module is normally high.
-        LS_enable           <= '0';
+        RS_enable           <= '0';
         state_next          <= is_in_valid; --We start at this state.
         --main implementation of statemachine
         case (state) is
@@ -100,7 +100,7 @@ begin
             when initialize =>
                 ready_in           <= '1'; --msgin_ready = 1
                 is_last_msg_enable <= '1'; --tell the register to hold the value "msgin_last".
-                initialize_regs    <= '1'; -- loads M into P, and '1', into C. Loads key_e into LSR_e. 
+                initialize_regs    <= '1'; -- loads M into P, and '1', into C. Loads key_e into RSR_e. 
                 Blak_reset_n       <= '0';  --reset blak module before use.
                 state_next         <= read_e_bit;
 
@@ -109,7 +109,7 @@ begin
                 is_last_msg_enable <= '0';
                 ready_in           <= '0'; -- msgin_ready = 0, so that a new message is not sent to the RSA CORE.
                 initialize_regs    <= '0'; --if prev state was initialize, then we dont want to initialize anymore.
-                LS_enable          <= '0'; --if prev state was Leftshift_e, then we now stop left shifting key_e. 
+                RS_enable          <= '0'; --if prev state was rightshift_e, then we now stop right shifting key_e. 
                 Blak_reset_n       <= '1';  --if prev state was initialize, then we stop resetting blak module now.
                 if e_bit = '1' then 
                     state_next <= calc_C; --we calculate C.
@@ -162,12 +162,12 @@ begin
                         state_next <= is_out_ready_not_final_msg;
                     end if;
                 else
-                    state_next <= Leftshift_e;  --if we have not processed all the bits of e, then we go here.
+                    state_next <= rightshift_e;  --if we have not processed all the bits of e, then we go here.
                 end if;
 
                 --State 9/11:
-            when Leftshift_e =>
-                LS_enable  <= '1'; --we leftshift the bits of e
+            when rightshift_e =>
+                RS_enable  <= '1'; --we rightshift the bits of e
                 state_next <= read_e_bit;
 
 

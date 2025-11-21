@@ -29,16 +29,16 @@ entity exponentiation is
         -- Only for use in testbenches and debugging:
         ---------------------------------------------
         -- pragma translate_off
-        dbg_LSR_e               : out std_logic_vector(C_block_size - 1 downto 0); --Left shift register for key_e
+        dbg_RSR_e               : out std_logic_vector(C_block_size - 1 downto 0); --Right shift register for key_e
         dbg_P_reg               : out std_logic_vector(C_block_size - 1 downto 0); --register for value P
         dbg_C_reg               : out std_logic_vector(C_block_size - 1 downto 0); --register for value C
         dbg_pc_select           : out std_logic; -- Signal to select which of P or C that are "using" the blakley module.
         dbg_e_bit_counter       : out std_logic_vector(counter_bit_size - 1 downto 0); --8 bit signal for a counter which the state machine uses to iterate over 256 bits of key_e.
         dbg_e_counter_increment : out std_logic; --tells e_counter to += 1.
         dbg_e_counter_end       : out std_logic; --tells FSM that we have processed all 256 bits of e.
-        dbg_LS_enable           : out std_logic; --signal which left shifts register LSR_e
-        dbg_e_bit               : out std_logic; --the LSB of register LSR_e
-        dbg_initialize_regs     : out std_logic; --loads initial values into C, P, LSR_e and e_counter
+        dbg_RS_enable           : out std_logic; --signal which right shifts register RSR_e
+        dbg_e_bit               : out std_logic; --the LSB of register RSR_e
+        dbg_initialize_regs     : out std_logic; --loads initial values into C, P, RSR_e and e_counter
         dbg_is_last_msg_enable  : out std_logic; --signal which tells "is_last_msg" to record the "msgin_last" signal.
         dbg_is_last_msg         : out std_logic; --register which = 1, if msgin_last has been high.
         dbg_state               : out state_type;
@@ -89,16 +89,16 @@ end exponentiation;
 architecture expBehave of exponentiation is
 
     -- Defining internal signals:
-    signal LSR_e               : std_logic_vector(C_block_size - 1 downto 0); --Left shift register for key_e
+    signal RSR_e               : std_logic_vector(C_block_size - 1 downto 0); --Right shift register for key_e
     signal P_reg               : std_logic_vector(C_block_size - 1 downto 0); --register for value P
     signal C_reg               : std_logic_vector(C_block_size - 1 downto 0); --register for value C
     signal pc_select           : std_logic; -- Signal to select which of P or C that are "using" the blakley module.
     signal e_bit_counter       : std_logic_vector(counter_bit_size - 1 downto 0); --8 bit signal for a counter which the state machine uses to iterate over 256 bits of key_e.
     signal e_counter_increment : std_logic; --tells e_counter to += 1.
     signal e_counter_end       : std_logic; --tells FSM that we have processed all 256 bits of e.
-    signal LS_enable           : std_logic; --signal which left shifts register LSR_e
-    signal e_bit               : std_logic; --the LSB of register LSR_e
-    signal initialize_regs     : std_logic; --loads initial values into C, P, LSR_e and e_counter
+    signal RS_enable           : std_logic; --signal which right shifts register RSR_e
+    signal e_bit               : std_logic; --the LSB of register RSR_e
+    signal initialize_regs     : std_logic; --loads initial values into C, P, RSR_e and e_counter
     signal is_last_msg_enable  : std_logic; --signal which tells "is_last_msg" to record the "msgin_last" signal.
     signal is_last_msg         : std_logic; --register which = 1, if msgin_last has been high.
 
@@ -124,7 +124,7 @@ begin
             msgout_last => msgout_last,
 
             --datapath signals:
-            LS_enable           => LS_enable,
+            RS_enable           => RS_enable,
             e_counter_end       => e_counter_end,
             e_counter_increment => e_counter_increment,
             initialize_regs     => initialize_regs,
@@ -183,22 +183,22 @@ begin
         Blak_clk <= clk;
 
     -- ***************************************************************************
-    -- LSR_e and sending the e_bit to the FSM.
+    -- RSR_e and sending the e_bit to the FSM.
     -- ***************************************************************************
     process (reset_n, clk) begin
         if (reset_n = '0') then
-            LSR_e <= (others => '0');
+            RSR_e <= (others => '0');
         elsif(rising_edge(clk)) then 
             if(initialize_regs = '1') then
-                LSR_e <= key;      -------------WARNING: this assumes key`s LSB is also in index 0 on the righthand side of the register.     
-            elsif (LS_enable = '1') then
-                LSR_e <= std_logic_vector(shift_right(unsigned(LSR_e), 1)); -- shift right by 1 bits, since LSB is on the righthand side.
+                RSR_e <= key;      -------------WARNING: this assumes key`s LSB is also in index 0 on the righthand side of the register.     
+            elsif (RS_enable = '1') then
+                RSR_e <= std_logic_vector(shift_right(unsigned(RSR_e), 1)); -- shift right by 1 bits, since LSB is on the righthand side.
             end if;
         end if;
     end process;
 
  
-    e_bit <= LSR_e(0); --sends the LSB of LSR_e, to the FSM. LSB is on the righthand side of LSR_e.
+    e_bit <= RSR_e(0); --sends the LSB of RSR_e, to the FSM. LSB is on the righthand side of RSR_e.
 
 
     -- ***************************************************************************
@@ -242,14 +242,14 @@ begin
 
     -- Only for use in testbenches and debugging:
     -- pragma translate_off
-    dbg_LSR_e               <= LSR_e;
+    dbg_RSR_e               <= RSR_e;
     dbg_P_reg               <= P_reg;
     dbg_C_reg               <= C_reg;
     dbg_pc_select           <= pc_select;
     dbg_e_bit_counter       <= e_bit_counter;
     dbg_e_counter_increment <= e_counter_increment;
     dbg_e_counter_end       <= e_counter_end;
-    dbg_LS_enable           <= LS_enable;
+    dbg_RS_enable           <= RS_enable;
     dbg_e_bit               <= e_bit;
     dbg_initialize_regs     <= initialize_regs;
     dbg_is_last_msg_enable  <= is_last_msg_enable;
