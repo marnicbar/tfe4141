@@ -252,16 +252,16 @@ begin
         check_value(Blak_enable, '1', ERROR, "Blak_enable must be '1' in state 'calc_P'");
         check_value(Blak_reset_n, '1', ERROR, "Blak_reset_n must be '1' in state 'calc_P'");
 
-        -- Prepare state for transition to is_out_ready state
+        -- Prepare state for transition to is_out_ready_not_final_msg state
         Blak_finished <= '1';
         pulse_1ns(clk);
         pulse_1ns(clk);
         check_value(state_type'pos(dbg_state), state_type'pos(is_e_processed), ERROR, "State must be 'is_e_processed'");
 
-        -- Transition to is_out_ready state
+        -- Transition to is_out_ready_not_final_msg state
         e_counter_end <= '1';
         pulse_1ns(clk);
-        check_value(state_type'pos(dbg_state), state_type'pos(is_out_ready), ERROR, "State must be 'is_out_ready'");
+        check_value(state_type'pos(dbg_state), state_type'pos(is_out_ready_not_final_msg), ERROR, "State must be 'is_out_ready_not_final_msg'");
         check_value(initialize_regs, '0', ERROR, "initialize_regs must be '0' in state 'is_out_ready'");
         check_value(ready_in, '0', ERROR, "ready_in must be '0' in state 'is_out_ready'");
         check_value(valid_out, '1', ERROR, "valid_out must be '1' in state 'is_out_ready'");
@@ -276,7 +276,7 @@ begin
         -- Test no transition if ready_out = '0'
         ready_out <= '0';
         pulse_1ns(clk);
-        check_value(state_type'pos(dbg_state), state_type'pos(is_out_ready), ERROR, "State must be 'is_out_ready'");
+        check_value(state_type'pos(dbg_state), state_type'pos(is_out_ready_not_final_msg), ERROR, "State must be 'is_out_ready_not_final_msg'");
 
         -- Test transition to is_in_valid state
         ready_out   <= '1';
@@ -303,27 +303,31 @@ begin
         Blak_finished <= '1';
         pulse_1ns(clk);
         pulse_1ns(clk);
+        check_value(state_type'pos(dbg_state), state_type'pos(is_e_processed), ERROR, "State must be 'is_e_processed'");
+
+        -- Test transition to is_out_ready_final_msg state
+        is_last_msg   <= '1';
         e_counter_end <= '1';
         pulse_1ns(clk);
-        check_value(state_type'pos(dbg_state), state_type'pos(is_out_ready), ERROR, "State must be 'is_out_ready'");
+        check_value(state_type'pos(dbg_state), state_type'pos(is_out_ready_final_msg), ERROR, "State must be 'is_out_ready_final_msg'");
+        check_value(initialize_regs, '0', ERROR, "initialize_regs must be '0' in state 'is_out_ready'");
+        check_value(ready_in, '0', ERROR, "ready_in must be '0' in state 'is_out_ready'");
+        check_value(valid_out, '1', ERROR, "valid_out must be '1' in state 'is_out_ready'");
+        check_value(is_last_msg_enable, '0', ERROR, "is_last_msg_enable must be '0' in state 'is_out_ready'");
+        check_value(LS_enable, '0', ERROR, "LS_enable must be '0' in state 'is_out_ready'");
+        check_value(msgout_last, '1', ERROR, "msgout_last must be '0' in state 'is_out_ready'");
+        check_value(e_counter_increment, '0', ERROR, "e_counter_increment must be '1' in state 'is_out_ready'");
+        check_value(pc_select, '0', ERROR, "pc_select must be '0' in state 'is_out_ready'");
+        check_value(Blak_enable, '0', ERROR, "Blak_enable must be '0' in state 'is_out_ready'");
+        check_value(Blak_reset_n, '1', ERROR, "Blak_reset_n must be '1' in state 'is_out_ready'");
 
-        -- Test transition to set_msgout_last state
-        ready_out   <= '1';
-        is_last_msg <= '1';
+        -- Test no transition if ready_out = '0'
+        ready_out <= '0';
         pulse_1ns(clk);
-        check_value(state_type'pos(dbg_state), state_type'pos(set_msgout_last), ERROR, "State must be 'set_msgout_last'");
-        check_value(initialize_regs, '0', ERROR, "initialize_regs must be '0' in state 'set_msgout_last'");
-        check_value(ready_in, '0', ERROR, "ready_in must be '0' in state 'set_msgout_last'");
-        check_value(valid_out, '0', ERROR, "valid_out must be '1' in state 'set_msgout_last'");
-        check_value(is_last_msg_enable, '0', ERROR, "is_last_msg_enable must be '0' in state 'set_msgout_last'");
-        check_value(LS_enable, '0', ERROR, "LS_enable must be '0' in state 'set_msgout_last'");
-        check_value(msgout_last, '1', ERROR, "msgout_last must be '0' in state 'set_msgout_last'");
-        check_value(e_counter_increment, '0', ERROR, "e_counter_increment must be '1' in state 'set_msgout_last'");
-        check_value(pc_select, '0', ERROR, "pc_select must be '0' in state 'set_msgout_last'");
-        check_value(Blak_enable, '0', ERROR, "Blak_enable must be '0' in state 'set_msgout_last'");
-        check_value(Blak_reset_n, '1', ERROR, "Blak_reset_n must be '1' in state 'set_msgout_last'");
+        check_value(state_type'pos(dbg_state), state_type'pos(is_out_ready_final_msg), ERROR, "State must still be 'is_out_ready_final_msg'");
 
         -- Prepare state for reset test
+        ready_out <= '1';
         pulse_1ns(clk);
         valid_in <= '1';
         pulse_1ns(clk);
