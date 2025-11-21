@@ -6,14 +6,19 @@ This repository contains the term project for the course _TFE4141 – Design of 
 
 The task is to write a fast implementation of the RSA algorithm, which involves solving the equation $C = M^e \bmod n$, where $C$ is the ciphertext, $M$ is the original message and $e$ and $n$ form the public key used for encryption.
 
+## Run tests locally
+
+All the tests:
+```
+make test
+```
+
+Only one test bench (for example the combinatorial logic of the modular exponentiation module)
+```
+make test mod-exp-comb
+```
+
 ## Modular exponentiation module
 
 ![Modular exponentiation state diagram](mod_exp_fsm.svg)
 
-## Blakley module
-
-## Run tests locally
-
-```
-make test
-```
